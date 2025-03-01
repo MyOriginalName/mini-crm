@@ -50,7 +50,11 @@ class ClientController extends Controller
     // Удалить клиента
     public function destroy(Client $client)
     {
+        if (auth()->user()->id !== $client->user_id) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
         $client->delete();
-        return response()->json(['message' => 'Client deleted successfully']);
+        return response()->json(['message' => 'Deleted']);
     }
+
 }

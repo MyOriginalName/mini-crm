@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini CRM API Docs</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: rgb(47, 47, 47);
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 20px;
+            background-color: #2d2d2d;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+        }
+        h1, h2, h3 {
+            color: #ffffff;
+        }
+        h1 {
+            text-align: center;
+            font-size: 28px;
+        }
+        h2 {
+            margin-top: 30px;
+            font-size: 24px;
+        }
+        h3 {
+            margin-top: 20px;
+            font-size: 20px;
+        }
+        p {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        pre {
+            background-color: #1e1e1e;
+            padding: 12px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        code {
+            color: #9cdcfe;
+            font-family: 'Courier New', monospace;
+        }
+        pre code {
+            display: block;
+            color: #ce9178;
+        }
+        hr {
+            border: 0;
+            height: 1px;
+            background-color: #555;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Mini CRM API Документация</h1>
+
+        <h2>Аутентификация</h2>
+        <h3>Регистрация пользователя</h3>
+        <p><strong>POST</strong> <code>/api/v1/register</code></p>
+        <pre><code>{
+  "name": "Иван Иванов",
+  "email": "ivan@example.com",
+  "password": "securepassword",
+  "password_confirmation": "securepassword"
+}</code></pre>
+        <p><strong>Ответ:</strong></p>
+        <pre><code>{ "token": "your_access_token" }</code></pre>
+        <hr>
+
+        <h3>Авторизация пользователя</h3>
+        <p><strong>POST</strong> <code>/api/v1/login</code></p>
+        <pre><code>{
+  "email": "ivan@example.com",
+  "password": "securepassword"
+}</code></pre>
+        <p><strong>Ответ:</strong></p>
+        <pre><code>{ "token": "your_access_token" }</code></pre>
+        <hr>
+
+        <h3>Выход из системы</h3>
+        <p><strong>POST</strong> <code>/api/v1/logout</code></p>
+        <p><strong>Ответ:</strong></p>
+        <pre><code>{ "message": "Successfully logged out" }</code></pre>
+        <hr>
+
+        <h3>Получение информации о пользователе</h3>
+        <p><strong>GET</strong> <code>/api/v1/user</code></p>
+        <p><strong>Ответ:</strong></p>
+        <pre><code>{
+  "id": 1,
+  "name": "Иван Иванов",
+  "email": "ivan@example.com"
+}</code></pre>
+        <hr>
+
+        <h2>Клиенты</h2>
+        <h3>Получение списка клиентов</h3>
+        <p><strong>GET</strong> <code>/api/v1/clients</code></p>
+        <p><strong>Ответ:</strong></p>
+        <pre><code>[{ "id": 1, "name": "Иван Иванов", "email": "ivan@example.com", "phone": "+79991234567" }]</code></pre>
+        <hr>
+
+        <h3>Создание клиента</h3>
+        <p><strong>POST</strong> <code>/api/v1/clients</code></p>
+        <pre><code>{ "name": "Петр Петров", "email": "petr@example.com", "phone": "+79991112233" }</code></pre>
+        <hr>
+
+        <h3>Обновление данных клиента</h3>
+        <p><strong>PUT/PATCH</strong> <code>/api/v1/clients/{client}</code></p>
+        <pre><code>{ "name": "Новый Имя", "email": "newemail@example.com" }</code></pre>
+        <hr>
+
+        <h3>Удаление клиента</h3>
+        <p><strong>DELETE</strong> <code>/api/v1/clients/{client}</code></p>
+        <hr>
+
+        <h2>Задачи</h2>
+        <h3>Получение списка задач</h3>
+        <p><strong>GET</strong> <code>/api/v1/tasks</code></p>
+        <hr>
+
+        <h3>Создание новой задачи</h3>
+        <p><strong>POST</strong> <code>/api/v1/tasks</code></p>
+        <pre><code>{ "client_id": 1, "title": "Подготовить презентацию", "description": "Сделать презентацию для клиента" }</code></pre>
+        <hr>
+
+        <h3>Получение конкретной задачи</h3>
+        <p><strong>GET</strong> <code>/api/v1/tasks/{task}</code></p>
+        <hr>
+
+        <h3>Обновление задачи</h3>
+        <p><strong>PUT/PATCH</strong> <code>/api/v1/tasks/{task}</code></p>
+        <pre><code>{ "title": "Обновленный заголовок", "status": "completed" }</code></pre>
+        <hr>
+
+        <h3>Удаление задачи</h3>
+        <p><strong>DELETE</strong> <code>/api/v1/tasks/{task}</code></p>
+        <hr>
+    </div>
+</body>
+</html>
