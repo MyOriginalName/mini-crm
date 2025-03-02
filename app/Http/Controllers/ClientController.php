@@ -4,14 +4,34 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ClientsExport;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Collection;
 
 class ClientController extends Controller
 {
     // Получить список всех клиентов
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(Client::all());
+        $query = Client::query();
+
+        if ($request->filled('name')) {
+            $query->where('name', 'like', '%' . $request->name . '%');
+        }
+
+        if ($request->filled('email')) {
+            $query->where('email', $request->email);
+        }
+
+        if ($request->filled('phone')) {
+            $query->where('phone', 'like', '%' . $request->phone . '%');
+        }
+
+        return response()->json($query->get());
     }
+
+
 
     // Создать нового клиента
     public function store(Request $request)
@@ -50,11 +70,20 @@ class ClientController extends Controller
     // Удалить клиента
     public function destroy(Client $client)
     {
-        if (auth()->user()->id !== $client->user_id) {
-            return response()->json(['message' => 'Forbidden'], 403);
-        }
         $client->delete();
         return response()->json(['message' => 'Deleted']);
+    }
+
+    // Экспорт клиентов
+    public function clients_export()
+    {
+        $clients = Client::all();
+        $pdf = Pdf::loadView('clients', compact('clients'))->setPaper('a4', 'portrait')->setOptions([
+            'defaultFont' => 'DejaVu Sans'
+        ]);
+
+
+        return $pdf->download('clients.pdf');
     }
 
 }

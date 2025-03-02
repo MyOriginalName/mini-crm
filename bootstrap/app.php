@@ -12,7 +12,15 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        $middleware->web(append: [
+            \App\Http\Middleware\HandleInertiaRequests::class,
+            \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
+        ]);
+
+        // Здесь регистрируем middleware
+        $middleware->alias([
+            'log.actions' => \App\Http\Middleware\ActionLogger::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
