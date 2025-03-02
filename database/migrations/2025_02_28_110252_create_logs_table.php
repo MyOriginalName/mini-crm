@@ -13,12 +13,14 @@ return new class extends Migration
     {
         Schema::create('logs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->text('action');
+            $table->unsignedBigInteger('user_id')->nullable(); // Сохраняем ID даже после удаления пользователя
+            $table->string('action'); // Действие (удаление клиента, обновление задачи и т.д.)
+            $table->string('entity_type'); // Тип сущности (client, task)
+            $table->unsignedBigInteger('entity_id'); // ID сущности
+            $table->json('data')->nullable(); // Дополнительные данные (например, какие поля изменились)
             $table->timestamps();
         });
     }
-
 
     /**
      * Reverse the migrations.
