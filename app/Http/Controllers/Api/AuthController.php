@@ -53,9 +53,15 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        // Delete all tokens and other authentication data
         $request->user()->tokens()->delete();
+        
+        // For additional security, revoke sessions if needed
+        if (session()->has('auth.password_confirmed_at')) {
+            session()->forget('auth.password_confirmed_at');
+        }
 
-        return response()->json(['message' => 'Logged out']);
+        return response()->json(['message' => 'Logged out successfully']);
     }
 
     public function user(Request $request)

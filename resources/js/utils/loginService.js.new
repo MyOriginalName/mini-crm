@@ -1,0 +1,138 @@
+/**
+ * Service to handle authentication-related functionality
+ */
+import customAxios from './axios';
+import axios from 'axios';
+import { setStorageItem, removeStorageItem, getStorageItem } from './localStorage';
+
+/**
+ * Initialize authentication session with Sanctum
+ */
+export const initSanctumAuth = async () => {
+  try {
+    await axios.get('/sanctum/csrf-cookie');
+    return true;
+  } catch (error) {
+    console.error('Failed to initialize Sanctum authentication:', error);
+    return false;
+  }
+};
+
+/**
+ * Extract token from Sanctum response
+ */
+const extractToken = (response) => {
+  // Log the response for debugging
+  console.log('Parsing login response:', {
+    status: response.status,
+    data: response.data
+  });
+
+  if (!response.data) {
+    console.error('No data in response');
+    return null;
+  }
+
+  // Check for token in various possible locations
+  if (response.data.token) {
+    return response.data.token;
+  }
+
+  if (response.data.plainTextToken) {
+    return response.data.plainTextToken;
+  }
+
+  if (response.data.data?.token) {
+    return response.data.data.token;
+  }
+
+  console.error('No token found in response data:', response.data);
+  return null;
+};
+
+/**
+ * Store authentication token
+ */
+export const storeAuthToken = (token) => {
+  if (!token) return;
+
+  // Clean token and ensure no Bearer prefix
+  const cleanToken = token.toString().replace(/^Bearer\s+/i, '');
+  
+  // Store the clean token
+  setStorageItem('token', cleanToken);
+
+  // Create auth header
+  const authHeader = `Bearer ${cleanToken}`;
+
+  // Apply to both axios instances
+  customAxios.defaults.headers.common['Authorization'] = authHeader;
+  window.axios.defaults.headers.common['Authorization'] = authHeader;
+
+  console.log('Token stored and applied to axios instances');
+};
+
+/**
+ * Get stored token
+ */
+export const getAuthToken = () => {
+  return getStorageItem('token');
+};
+
+/**
+ * Clear authentication
+ */
+export const clearAuthToken = () => {
+  removeStorageItem('token');
+  delete customAxios.defaults.headers.common['Authorization'];
+  delete window.axios.defaults.headers.common['Authorization'];
+};
+
+/**
+ * Handle login
+ */
+export const login = async (credentials) => {
+  try {
+    // Get CSRF cookie first
+    await initSanctumAuth();
+    
+    // Clear any existing auth
+    clearAuthToken();
+
+    // Attempt login
+    const response = await axios.post('/api/v1/login', credentials, {
+      withCredentials: true,
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    });
+
+    const token = extractToken(response);
+    if (!token) {
+      throw new Error('No valid token received from login');
+    }
+
+    storeAuthToken(token);
+    return response;
+  } catch (error) {
+    console.error('Login failed:', error);
+    clearAuthToken();
+    throw error;
+  }
+};
+
+/**
+ * Handle logout
+ */
+export const logout = async () => {
+  try {
+    await axios.post('/api/v1/logout');
+    clearAuthToken();
+  } catch (error) {
+    console.error('Logout failed:', error);
+    clearAuthToken();
+    throw error;
+  }
+};

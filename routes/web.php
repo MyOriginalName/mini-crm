@@ -1,9 +1,12 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\StockController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+
+Route::get('/stocks', [StockController::class, 'index'])->name('stocks.index');
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
