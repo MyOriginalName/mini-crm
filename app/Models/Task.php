@@ -11,9 +11,24 @@ class Task extends Model
 
     protected $fillable = ['title', 'description', 'status', 'client_id', 'user_id'];
 
+    /**
+     * Get the client that owns the task.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
     public function client()
     {
         return $this->belongsTo(Client::class);
+    }
+
+    /**
+     * Get the user that owns the task.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }
 

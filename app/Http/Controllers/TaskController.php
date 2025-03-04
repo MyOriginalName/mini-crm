@@ -10,7 +10,11 @@ class TaskController extends Controller
     // Получить список задач
     public function index()
     {
-        return response()->json(Task::with('client')->get());
+        return response()->json(
+            Task::with(['client', 'user'])
+                ->where('user_id', auth()->id())
+                ->get()
+        );
     }
 
     // Создать новую задачу
@@ -20,43 +24,58 @@ class TaskController extends Controller
             'client_id' => 'required|exists:clients,id',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'status' => 'nullable|string|in:pending,in_progress,completed'
         ]);
 
         $task = Task::create([
             'client_id' => $validated['client_id'],
-            'user_id' => auth()->id(), // <-- добавляем ID текущего пользователя
+            'user_id' => auth()->id(),
             'title' => $validated['title'],
             'description' => $validated['description'],
+            'status' => $validated['status'] ?? 'pending'
         ]);
 
         return response()->json($task, 201);
     }
 
-
     // Обновить задачу
     public function update(Request $request, Task $task)
     {
-        $request->validate([
-            'title' => 'string',
+        if ($task->user_id !== auth()->id()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $validated = $request->validate([
+            'title' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
-            'is_completed' => 'boolean'
+            'status' => 'sometimes|string|in:pending,in_progress,completed',
+            'client_id' => 'sometimes|exists:clients,id'
         ]);
 
-        $task->update($request->all());
+        $task->update($validated);
+        $task->load(['client', 'user']);
         return response()->json($task);
     }
     
     // Показать задачу
     public function show(Task $task)
     {
+        if ($task->user_id !== auth()->id()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+        
+        $task->load(['client', 'user']);
         return response()->json($task);
     }
-
 
     // Удалить задачу
     public function destroy(Task $task)
     {
+        if ($task->user_id !== auth()->id()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
         $task->delete();
-        return response()->json(['message' => 'Задача удалена']);
+        return response()->json(['message' => 'Task deleted successfully']);
     }
 }

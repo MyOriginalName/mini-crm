@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\TinkoffController;
 
 Route::prefix('v1')->group(function () {
     Route::post('register', [AuthController::class, 'register']);

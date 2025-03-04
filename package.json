@@ -7,7 +7,6 @@
     },
     "devDependencies": {
         "@headlessui/react": "^2.0.0",
-        "@inertiajs/react": "^2.0.0",
         "@tailwindcss/forms": "^0.5.3",
         "@tailwindcss/vite": "^4.0.0",
         "@vitejs/plugin-react": "^4.3.4",
@@ -16,15 +15,16 @@
         "concurrently": "^9.0.1",
         "laravel-vite-plugin": "^1.2.0",
         "postcss": "^8.4.31",
-        "react": "^18.3.1",
-        "react-dom": "^18.3.1",
         "tailwindcss": "^3.2.1",
         "vite": "^6.2.0"
     },
     "dependencies": {
+        "@inertiajs/react": "^2.0.0",
+        "@radix-ui/react-label": "^2.0.2",
         "@shadcn/ui": "^0.0.4",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
         "react-draggable": "^4.4.6",
-        "react-router-dom": "^7.2.0",
         "recharts": "^2.15.1"
     }
 }

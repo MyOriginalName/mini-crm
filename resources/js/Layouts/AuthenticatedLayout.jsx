@@ -30,6 +30,18 @@ export default function AuthenticatedLayout({ header, children }) {
                                 >
                                     Dashboard
                                 </NavLink>
+                                <NavLink href="#" className="px-3 py-2">
+                                    Test 1
+                                </NavLink>
+                                <NavLink href="#" className="px-3 py-2">
+                                    Test 2
+                                </NavLink>
+                                <NavLink href="#" className="px-3 py-2">
+                                    Test 3
+                                </NavLink>
+                                <NavLink href="#" className="px-3 py-2">
+                                    Test 4
+                                </NavLink>
                             </div>
                         </div>
 
@@ -133,6 +145,18 @@ export default function AuthenticatedLayout({ header, children }) {
                             active={route().current('dashboard')}
                         >
                             Dashboard
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink href="#">
+                            Test 1
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink href="#">
+                            Test 2
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink href="#">
+                            Test 3
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink href="#">
+                            Test 4
                         </ResponsiveNavLink>
                     </div>
 
