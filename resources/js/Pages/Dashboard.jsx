@@ -28,7 +28,7 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
           <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
             <div className="p-6">
-              <h1 className="text-2xl font-bold mb-4 text-red-500">Инвестиционная CRM</h1>
+              <h1 className="text-2xl font-bold mb-4 text-red-500">Какая-то CRM</h1>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                 <DraggableWidget type="analytics" />
                 <DraggableWidget type="news" />

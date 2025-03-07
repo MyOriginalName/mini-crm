@@ -46,15 +46,18 @@ class AuthController extends Controller
         }
 
         return response()->json([
-            'user' => $user,
+            'user' => $user->only(['id', 'name', 'email']),
             'token' => $user->createToken('api-token')->plainTextToken,
         ]);
+
     }
 
     public function logout(Request $request)
     {
         // Delete all tokens and other authentication data
-        $request->user()->tokens()->delete();
+        if ($request->user()) {
+            $request->user()->tokens()->delete();
+        }
         
         // For additional security, revoke sessions if needed
         if (session()->has('auth.password_confirmed_at')) {
@@ -66,6 +69,11 @@ class AuthController extends Controller
 
     public function user(Request $request)
     {
-        return response()->json($request->user());
+        if (!$request->user()) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+        
+        return response()->json($request->user()->only(['id', 'name', 'email']));
     }
+
 }
