@@ -28,7 +28,7 @@ function ClientsWidget() {
         const token = getAuthToken();
         if (!token) {
           console.error('No auth token available');
-          window.location.href = '/login';
+          // window.location.href = '/login';
           return;
         }
         
@@ -36,7 +36,7 @@ function ClientsWidget() {
         await fetchClients();
       } catch (error) {
         console.error('Failed to initialize:', error);
-        window.location.href = '/login';
+        // window.location.href = '/login';
       }
     };
     init();
@@ -46,7 +46,7 @@ function ClientsWidget() {
     const token = getAuthToken();
     if (!token) {
       console.error('No auth token available');
-      window.location.href = '/login';
+      // window.location.href = '/login';
       return;
     }
     setLoading(true);
@@ -62,8 +62,8 @@ function ClientsWidget() {
         await initSanctumAuth();
       } catch (error) {
         console.error('Failed to initialize auth:', error);
-        window.location.href = '/login';
-        return;
+        // window.location.href = '/login';
+        // return;
       }
       // Use full path to avoid baseURL issues
       // Make the API request with token auth
@@ -101,11 +101,11 @@ function ClientsWidget() {
         removeStorageItem('token');
         
         // Redirect to login page
-        if (!window.location.href.includes('login')) {
-          window.location.href = '/login';
-        } else {
-          setClients([]);
-        }
+        // if (!window.location.href.includes('login')) {
+        //   window.location.href = '/login';
+        // } else {
+        //   setClients([]);
+        // }
       } else {
         // Reset redirect counter for non-auth errors
         sessionStorage.removeItem('redirectCount');

@@ -78,11 +78,11 @@ function CreateClientWidget({ onClientCreated }) {
       }
     } catch (error) {
       console.error("Error creating client:", error);
-      if (error.response && error.response.status === 401) {
-        // Redirect to login page if unauthorized
-        window.location.href = '/login';
-        return;
-      }
+      // if (error.response && error.response.status === 401) {
+      //   // Redirect to login page if unauthorized
+      //   window.location.href = '/login';
+      //   return;
+      // }
       if (error.response && error.response.data && error.response.data.errors) {
         setErrors(error.response.data.errors);
       } else {

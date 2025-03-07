@@ -5,69 +5,18 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { login } from '@/utils/loginService';
-import { useState } from 'react';
 
 export default function Login({ status, canResetPassword }) {
-    const { data, setData, processing, errors: formErrors, reset } = useForm({
+    const { data, setData, post, processing, errors } = useForm({
         email: '',
         password: '',
         remember: false,
     });
-    
-    const [errors, setErrors] = useState({});
-    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const submit = async (e) => {
+    const submit = (e) => {
         e.preventDefault();
-        
-        // Check for empty email and password fields
-        const newErrors = {};
-        if (!data.email) {
-            newErrors.email = 'Email field is required';
-        }
-        if (!data.password) {
-            newErrors.password = 'Password field is required';
-        }
-        
-        // Only proceed with submission if there are no empty fields
-        if (Object.keys(newErrors).length === 0) {
-            setIsSubmitting(true);
-            
-            try {
-                // Use our custom login service instead of Inertia
-                console.log('Submitting login credentials...');
-                const response = await login({
-                    email: data.email,
-                    password: data.password
-                });
-                console.log('Login successful:', {
-                    hasToken: !!response.data?.token,
-                    data: response.data
-                });
-                
-                // If login successful, reset form and redirect to dashboard
-                reset('password');
-                window.location.href = '/dashboard';
-            } catch (error) {
-                // Handle login error
-                console.error('Login failed:', error);
-                
-                // Set error messages from the API response if available
-                if (error.response?.data?.errors) {
-                    setErrors(error.response.data.errors);
-                } else {
-                    setErrors({ 
-                        email: 'Authentication failed. Please check your credentials.' 
-                    });
-                }
-            } finally {
-                setIsSubmitting(false);
-            }
-        } else {
-            // Set errors for empty fields
-            setErrors(newErrors);
-        }
+        // Отправляем данные формы на маршрут login, определённый в routes/auth.php
+        post(route('login'));
     };
 
     return (
@@ -83,7 +32,6 @@ export default function Login({ status, canResetPassword }) {
             <form onSubmit={submit}>
                 <div>
                     <InputLabel htmlFor="email" value="Email" />
-
                     <TextInput
                         id="email"
                         type="email"
@@ -94,13 +42,11 @@ export default function Login({ status, canResetPassword }) {
                         isFocused={true}
                         onChange={(e) => setData('email', e.target.value)}
                     />
-
                     <InputError message={errors.email} className="mt-2" />
                 </div>
 
                 <div className="mt-4">
                     <InputLabel htmlFor="password" value="Password" />
-
                     <TextInput
                         id="password"
                         type="password"
@@ -110,7 +56,6 @@ export default function Login({ status, canResetPassword }) {
                         autoComplete="current-password"
                         onChange={(e) => setData('password', e.target.value)}
                     />
-
                     <InputError message={errors.password} className="mt-2" />
                 </div>
 
@@ -119,9 +64,7 @@ export default function Login({ status, canResetPassword }) {
                         <Checkbox
                             name="remember"
                             checked={data.remember}
-                            onChange={(e) =>
-                                setData('remember', e.target.checked)
-                            }
+                            onChange={(e) => setData('remember', e.target.checked)}
                         />
                         <span className="ms-2 text-sm text-gray-600">
                             Remember me
