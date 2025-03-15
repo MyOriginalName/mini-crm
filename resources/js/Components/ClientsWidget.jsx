@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import customAxios from "../utils/axios";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useClientsContext } from "./ClientsWidgetContext";
-import { getAuthToken, initSanctumAuth } from "../utils/loginService";
-import { removeStorageItem } from "../utils/localStorage";
+import { Link } from "@inertiajs/react";
+import axios from 'axios';
 
 function ClientsWidget() {
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
     name: "",
     email: "",
@@ -18,98 +18,23 @@ function ClientsWidget() {
   const { refreshTrigger } = useClientsContext();
 
   useEffect(() => {
-    // Initialize Sanctum and fetch clients
-    const init = async () => {
-      try {
-        // Initialize Sanctum first to ensure CSRF protection
-        await initSanctumAuth();
-        
-        // Then check for auth token
-        const token = getAuthToken();
-        if (!token) {
-          console.error('No auth token available');
-          // window.location.href = '/login';
-          return;
-        }
-        
-        // Finally fetch clients
-        await fetchClients();
-      } catch (error) {
-        console.error('Failed to initialize:', error);
-        // window.location.href = '/login';
-      }
-    };
-    init();
-  }, [refreshTrigger]);
+    fetchClients();
+  }, [refreshTrigger, filters]);
 
   const fetchClients = async () => {
-    const token = getAuthToken();
-    if (!token) {
-      console.error('No auth token available');
-      // window.location.href = '/login';
-      return;
-    }
     setLoading(true);
+    setError(null);
     try {
-      const params = {};
-      if (filters.name) params.name = filters.name;
-      if (filters.email) params.email = filters.email;
-      if (filters.phone) params.phone = filters.phone;
+      const params = new URLSearchParams();
+      if (filters.name) params.append('name', filters.name);
+      if (filters.email) params.append('email', filters.email);
+      if (filters.phone) params.append('phone', filters.phone);
       
-      // Get CSRF cookie and verify auth token
-      try {
-        const { initSanctumAuth } = await import('../utils/loginService');
-        await initSanctumAuth();
-      } catch (error) {
-        console.error('Failed to initialize auth:', error);
-        // window.location.href = '/login';
-        // return;
-      }
-      // Use full path to avoid baseURL issues
-      // Make the API request with token auth
-      const response = await customAxios.get('/clients', { params });
-      
-      // Validate response
-      if (response.status !== 200) {
-        throw new Error(`Server returned ${response.status}: ${response.statusText}`);
-      }
-      
-      // Add detailed logging
-      console.log('Clients request details:', {
-        config: response.config,
-        status: response.status,
-        headers: response.headers
-      });
-      
-      if (!response.data) {
-        throw new Error('No data received from clients API');
-      }
-      
-      console.log('API Response:', {
-        status: response.status,
-        hasData: !!response.data,
-        dataLength: response.data?.length || 0
-      });
-      
-      // Reverse the order of clients to display from the end
-      setClients([...response.data].reverse());
+      const response = await axios.get(`/clients/widget?${params.toString()}`);
+      setClients(response.data);
     } catch (error) {
       console.error("Error fetching clients:", error);
-      if (error.response && error.response.status === 401) {
-        console.error('Authentication token expired or invalid');
-        // Clear any existing tokens
-        removeStorageItem('token');
-        
-        // Redirect to login page
-        // if (!window.location.href.includes('login')) {
-        //   window.location.href = '/login';
-        // } else {
-        //   setClients([]);
-        // }
-      } else {
-        // Reset redirect counter for non-auth errors
-        sessionStorage.removeItem('redirectCount');
-      }
+      setError("Ошибка при загрузке клиентов");
     } finally {
       setLoading(false);
     }
@@ -123,17 +48,12 @@ function ClientsWidget() {
     }));
   };
 
-  const applyFilters = () => {
-    fetchClients();
-  };
-
   const clearFilters = () => {
     setFilters({
       name: "",
       email: "",
       phone: ""
     });
-    fetchClients();
   };
 
   return (
@@ -166,9 +86,12 @@ function ClientsWidget() {
             onChange={handleFilterChange}
             className="w-full sm:w-auto"
           />
-          <Button onClick={applyFilters}>Применить фильтры</Button>
           <Button variant="outline" onClick={clearFilters}>Сбросить</Button>
         </div>
+
+        {error && (
+          <div className="text-red-500 mb-4">{error}</div>
+        )}
 
         {loading ? (
           <p>Загрузка...</p>
@@ -180,6 +103,7 @@ function ClientsWidget() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Имя</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Телефон</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Действия</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -188,6 +112,26 @@ function ClientsWidget() {
                     <td className="px-6 py-4 whitespace-nowrap">{client.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap">{client.email}</td>
                     <td className="px-6 py-4 whitespace-nowrap">{client.phone}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex gap-2">
+                        <Link
+                          href={`/clients/${client.id}`}
+                          className="text-blue-600 hover:text-blue-800"
+                        >
+                          <Button variant="outline" size="sm">
+                            Просмотр
+                          </Button>
+                        </Link>
+                        <Link
+                          href={`/clients/${client.id}/edit`}
+                          className="text-green-600 hover:text-green-800"
+                        >
+                          <Button variant="outline" size="sm">
+                            Редактировать
+                          </Button>
+                        </Link>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
