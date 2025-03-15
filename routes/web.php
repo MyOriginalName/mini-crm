@@ -35,8 +35,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('Dashboard');
     })->name('dashboard');
 
+    Route::get('/clients/widget', [ClientController::class, 'widget'])->name('clients.widget');
+    Route::post('/clients/widget', [ClientController::class, 'widgetStore'])->name('clients.widget.store');
+    
     Route::resource('clients', ClientController::class);
-    Route::patch('/clients/{client}/tags', [ClientController::class, 'updateTags'])->name('clients.update-tags');
+    Route::patch('/clients/{client}/tags', [ClientController::class, 'updateTags'])->name('clients.updateTags');
     
     Route::resource('deals', DealController::class);
     Route::get('/deals/kanban', [DealController::class, 'kanban'])->name('deals.kanban');

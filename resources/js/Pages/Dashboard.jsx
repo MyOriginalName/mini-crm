@@ -1,101 +1,112 @@
-import { useState, useEffect } from "react";
-import Draggable from "react-draggable";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import AnalyticsWidget from '@/components/AnalyticsWidget';
+import { useState, useEffect } from 'react';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { Head } from '@inertiajs/react';
+import { Responsive, WidthProvider } from 'react-grid-layout';
 import ClientsWidget from '@/Components/ClientsWidget';
 import CreateClientWidget from '@/Components/CreateClientWidget';
 import { ClientsWidgetProvider } from '@/Components/ClientsWidgetContext';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
+import 'react-grid-layout/css/styles.css';
+import 'react-resizable/css/styles.css';
 
-export default function Dashboard() {
-  console.log("Dashboard загружается");
-  
-  // Legacy function kept for backward compatibility
-  const handleClientCreated = () => {
-    // This is no longer needed as we're using context now
-  };
+const ResponsiveGridLayout = WidthProvider(Responsive);
 
-  return (
-    <AuthenticatedLayout
-      header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Dashboard</h2>}
-    >
-      <Head title="Dashboard" />
-      
-      <div className="py-12">
-        <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-          <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-            <div className="p-6">
-              <h1 className="text-2xl font-bold mb-4 text-red-500">Какая-то CRM</h1>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                <DraggableWidget type="analytics" />
-                <DraggableWidget type="news" />
-                <ClientsWidgetProvider>
-                  <DraggableWidget type="clients" />
-                  <DraggableWidget type="createClient" onClientCreated={handleClientCreated} />
-                </ClientsWidgetProvider>
-              </div>
+export default function Dashboard({ auth }) {
+    const [layouts, setLayouts] = useState({
+        lg: [
+            { i: 'clients', x: 0, y: 0, w: 8, h: 4, minW: 4, minH: 3 },
+            { i: 'createClient', x: 8, y: 0, w: 4, h: 4, minW: 3, minH: 3 },
+        ],
+        md: [
+            { i: 'clients', x: 0, y: 0, w: 6, h: 4, minW: 4, minH: 3 },
+            { i: 'createClient', x: 6, y: 0, w: 4, h: 4, minW: 3, minH: 3 },
+        ],
+        sm: [
+            { i: 'clients', x: 0, y: 0, w: 12, h: 4, minW: 4, minH: 3 },
+            { i: 'createClient', x: 0, y: 4, w: 12, h: 4, minW: 3, minH: 3 },
+        ],
+    });
+
+    const handleLayoutChange = (layout, layouts) => {
+        setLayouts(layouts);
+        localStorage.setItem('dashboard-layouts', JSON.stringify(layouts));
+    };
+
+    useEffect(() => {
+        const savedLayouts = localStorage.getItem('dashboard-layouts');
+        if (savedLayouts) {
+            setLayouts(JSON.parse(savedLayouts));
+        }
+    }, []);
+
+    return (
+        <AuthenticatedLayout
+            user={auth.user}
+            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Панель управления</h2>}
+        >
+            <Head title="Панель управления" />
+
+            <div className="py-12">
+                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                    <ClientsWidgetProvider>
+                        <ResponsiveGridLayout
+                            className="layout"
+                            layouts={layouts}
+                            breakpoints={{ lg: 1200, md: 996, sm: 768 }}
+                            cols={{ lg: 12, md: 10, sm: 12 }}
+                            rowHeight={100}
+                            onLayoutChange={handleLayoutChange}
+                            isDraggable={true}
+                            isResizable={true}
+                            margin={[20, 20]}
+                        >
+                            <div key="clients" className="widget-container">
+                                <ClientsWidget />
+                            </div>
+                            <div key="createClient" className="widget-container">
+                                <CreateClientWidget />
+                            </div>
+                        </ResponsiveGridLayout>
+                    </ClientsWidgetProvider>
+                </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </AuthenticatedLayout>
-  );
-}
 
-function DraggableWidget({ type, onClientCreated }) {
-  return (
-    <Draggable handle=".drag-handle" grid={[3, 3]} >
-      <div className="relative w-full cursor-default">
-        {/* Черная линия, которая теперь будет handle (область перетаскивания) */}
-        <div className="drag-handle w-full h-2 bg-black cursor-grab border border-gray-800"></div>
+            <style jsx>{`
+                .widget-container {
+                    background: white;
+                    border-radius: 0.5rem;
+                    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+                    overflow: hidden;
+                    height: 100%;
+                }
+                
+                .widget-container > div {
+                    height: 100%;
+                    overflow: auto;
+                }
 
-        {/* Контент виджета */}
-        <Widget type={type} onClientCreated={onClientCreated} />
-      </div>
-    </Draggable>
-  );
-}
+                .react-resizable-handle {
+                    background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2IDYiIHN0eWxlPSJiYWNrZ3JvdW5kLWNvbG9yOiNmZmZmZmYwMCIgeD0iMHB4IiB5PSIwcHgiIHdpZHRoPSI2cHgiIGhlaWdodD0iNnB4Ij48ZyBvcGFjaXR5PSIwLjMwMiI+PHBhdGggZD0iTSA2IDYgTCAwIDYgTCAwIDQuMiBMIDQgNC4yIEwgNC4yIDQuMiBMIDQuMiAwIEwgNiAwIEwgNiA2IEwgNiA2IFoiIGZpbGw9IiMwMDAwMDAiLz48L2c+PC9zdmc+');
+                    background-position: bottom right;
+                    background-repeat: no-repeat;
+                    background-origin: content-box;
+                    box-sizing: border-box;
+                    cursor: se-resize;
+                    padding: 0 3px 3px 0;
+                }
 
-function Widget({ type, onClientCreated }) {
-  if (type === "analytics") {
-    return <AnalyticsWidget />;
-  }
-  if (type === "news") {
-    return <NewsWidget />;
-  }
-  if (type === "clients") {
-    return <ClientsWidget />;
-  }
-  if (type === "createClient") {
-    return <CreateClientWidget onClientCreated={onClientCreated} />;
-  }
-  return null;
-}
-
-function NewsWidget() {
-  const [news, setNews] = useState([]);
-
-  useEffect(() => {
-    setNews([
-      { title: "Новость 1" },
-      { title: "Новость 2" },
-      { title: "Новость 3" },
-    ]);
-  }, []);
-
-  return (
-    <Card>
-      <CardContent>
-        <h2 className="text-xl font-bold mb-2">Новости</h2>
-        <ul>
-          {news.map((item, index) => (
-            <li key={index} className="mb-1">{item.title}</li>
-          ))}
-        </ul>
-      </CardContent>
-    </Card>
-  );
+                .react-grid-item.react-grid-placeholder {
+                    background: #1e40af;
+                    opacity: 0.2;
+                    transition-duration: 100ms;
+                    z-index: 2;
+                    border-radius: 0.5rem;
+                    -webkit-user-select: none;
+                    -moz-user-select: none;
+                    -ms-user-select: none;
+                    -o-user-select: none;
+                    user-select: none;
+                }
+            `}</style>
+        </AuthenticatedLayout>
+    );
 }

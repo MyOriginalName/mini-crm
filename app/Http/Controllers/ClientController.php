@@ -120,4 +120,40 @@ class ClientController extends Controller
         return redirect()->back()
             ->with('message', 'Теги клиента обновлены');
     }
+
+    public function widget(Request $request)
+    {
+        $query = Client::query()
+            ->with('tags');
+
+        if ($request->has('name')) {
+            $query->where('name', 'like', '%' . $request->get('name') . '%');
+        }
+
+        if ($request->has('email')) {
+            $query->where('email', 'like', '%' . $request->get('email') . '%');
+        }
+
+        if ($request->has('phone')) {
+            $query->where('phone', 'like', '%' . $request->get('phone') . '%');
+        }
+
+        $clients = $query->latest()->limit(5)->get();
+
+        return response()->json($clients);
+    }
+
+    public function widgetStore(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:clients,email',
+            'phone' => 'required|string|max:20',
+            'company' => 'nullable|string|max:255',
+        ]);
+
+        $client = Client::create($validated);
+
+        return response()->json($client);
+    }
 }

@@ -1,16 +1,17 @@
 import { useState } from "react";
-import axios from "axios";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useClientsContext } from "./ClientsWidgetContext";
+import axios from 'axios';
 
-function CreateClientWidget({ onClientCreated }) {
+function CreateClientWidget() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    phone: ""
+    phone: "",
+    company: ""
   });
   
   const [errors, setErrors] = useState({});
@@ -62,28 +63,18 @@ function CreateClientWidget({ onClientCreated }) {
     setIsSubmitting(true);
     
     try {
-      await axios.post('/api/v1/clients', formData);
+      const response = await axios.post('/clients/widget', formData);
       setSuccessMessage("Клиент успешно создан!");
       setFormData({
         name: "",
         email: "",
-        phone: ""
+        phone: "",
+        company: ""
       });
-      // Refresh clients list using context
       refreshClients();
-      
-      // Notify parent component that a client was created (legacy support)
-      if (onClientCreated) {
-        onClientCreated();
-      }
     } catch (error) {
       console.error("Error creating client:", error);
-      // if (error.response && error.response.status === 401) {
-      //   // Redirect to login page if unauthorized
-      //   window.location.href = '/login';
-      //   return;
-      // }
-      if (error.response && error.response.data && error.response.data.errors) {
+      if (error.response?.data?.errors) {
         setErrors(error.response.data.errors);
       } else {
         setErrors({
@@ -148,6 +139,18 @@ function CreateClientWidget({ onClientCreated }) {
               className={errors.phone ? "border-red-500" : ""}
             />
             {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+          </div>
+
+          <div>
+            <Label htmlFor="company">Компания</Label>
+            <Input
+              id="company"
+              name="company"
+              value={formData.company}
+              onChange={handleChange}
+              className={errors.company ? "border-red-500" : ""}
+            />
+            {errors.company && <p className="text-red-500 text-sm mt-1">{errors.company}</p>}
           </div>
           
           <Button type="submit" disabled={isSubmitting}>
