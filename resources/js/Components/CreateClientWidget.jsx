@@ -87,10 +87,11 @@ function CreateClientWidget() {
   };
 
   return (
-    <Card className="w-full">
-      <CardContent className="p-4">
-        <h2 className="text-xl font-bold mb-4">Создать клиента</h2>
-        
+    <Card className="w-full h-full flex flex-col">
+      <div className="drag-handle bg-gray-50 px-4 py-3 border-b cursor-move select-none">
+        <h2 className="text-xl font-bold">Создать клиента</h2>
+      </div>
+      <CardContent className="p-4 flex-1 flex flex-col">
         {successMessage && (
           <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
             {successMessage}
@@ -103,59 +104,67 @@ function CreateClientWidget() {
           </div>
         )}
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="name">Имя</Label>
-            <Input
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              className={errors.name ? "border-red-500" : ""}
-            />
-            {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
-          </div>
-          
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              className={errors.email ? "border-red-500" : ""}
-            />
-            {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
-          </div>
-          
-          <div>
-            <Label htmlFor="phone">Телефон</Label>
-            <Input
-              id="phone"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              className={errors.phone ? "border-red-500" : ""}
-            />
-            {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+        <form onSubmit={handleSubmit} className="space-y-4 flex-1 flex flex-col">
+          <div className="flex-1">
+            <div className="mb-4">
+              <Label htmlFor="name">Имя</Label>
+              <Input
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                className={errors.name ? "border-red-500" : ""}
+              />
+              {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+            </div>
+            
+            <div className="mb-4">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                className={errors.email ? "border-red-500" : ""}
+              />
+              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+            </div>
+            
+            <div className="mb-4">
+              <Label htmlFor="phone">Телефон</Label>
+              <Input
+                id="phone"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                className={errors.phone ? "border-red-500" : ""}
+              />
+              {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+            </div>
+
+            <div className="mb-4">
+              <Label htmlFor="company">Компания</Label>
+              <Input
+                id="company"
+                name="company"
+                value={formData.company}
+                onChange={handleChange}
+                className={errors.company ? "border-red-500" : ""}
+              />
+              {errors.company && <p className="text-red-500 text-sm mt-1">{errors.company}</p>}
+            </div>
           </div>
 
-          <div>
-            <Label htmlFor="company">Компания</Label>
-            <Input
-              id="company"
-              name="company"
-              value={formData.company}
-              onChange={handleChange}
-              className={errors.company ? "border-red-500" : ""}
-            />
-            {errors.company && <p className="text-red-500 text-sm mt-1">{errors.company}</p>}
+          <div className="mt-auto pt-4 border-t">
+            <Button 
+              type="submit" 
+              disabled={isSubmitting}
+              className="w-full"
+            >
+              {isSubmitting ? "Создание..." : "Создать клиента"}
+            </Button>
           </div>
-          
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Создание..." : "Создать клиента"}
-          </Button>
         </form>
       </CardContent>
     </Card>

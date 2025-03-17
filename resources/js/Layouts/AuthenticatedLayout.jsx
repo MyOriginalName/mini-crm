@@ -38,7 +38,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                     Клиенты
                                 </NavLink>
                                 <NavLink
-                                    href={route('deals.kanban')}
+                                    href={route('deals.index')}
                                     active={route().current('deals.*')}
                                 >
                                     Сделки
@@ -154,7 +154,7 @@ export default function AuthenticatedLayout({ header, children }) {
                             Клиенты
                         </ResponsiveNavLink>
                         <ResponsiveNavLink 
-                            href={route('deals.kanban')}
+                            href={route('deals.index')}
                             active={route().current('deals.*')}
                         >
                             Сделки

@@ -13,10 +13,15 @@ Route::prefix('v1')->group(function () {
     Route::middleware(['auth:sanctum', 'log.actions'])->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
         Route::get('user', [AuthController::class, 'user']);
-        Route::get('clients/export/', [ClientController::class, 'clients_export']);
-
-        // Добавляем логирование на удаление клиентов и задач
+        
+        // Клиенты
+        Route::get('clients/export', [ClientController::class, 'clients_export']);
+        Route::get('clients/widget', [ClientController::class, 'widget']);
+        Route::post('clients/widget', [ClientController::class, 'widgetStore']);
+        Route::put('clients/{client}/tags', [ClientController::class, 'updateTags']);
         Route::apiResource('clients', ClientController::class);
+        
+        // Задачи
         Route::apiResource('tasks', TaskController::class);
     });
 });
