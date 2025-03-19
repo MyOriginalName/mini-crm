@@ -4,109 +4,108 @@ namespace App\Http\Controllers;
 
 use App\Models\Deal;
 use App\Models\Client;
+use App\Services\DealService;
+use App\Http\Requests\DealRequest;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class DealController extends Controller
 {
+    public function __construct(
+        private readonly DealService $dealService
+    ) {}
+
     public function index(Request $request)
     {
-        $query = Deal::with('client');
-
-        if ($request->has('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->has('search')) {
-            $search = $request->get('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%")
-                    ->orWhereHas('client', function ($q) use ($search) {
-                        $q->where('name', 'like', "%{$search}%");
-                    });
-            });
-        }
-
-        $deals = $query->paginate(10)
-            ->withQueryString();
-
-        $dealsByStatus = Deal::selectRaw('status, COUNT(*) as count, SUM(value) as total_value')
-            ->groupBy('status')
-            ->get();
+        $deals = $this->dealService->getAllDeals($request->only(['search', 'status']));
+        $statistics = $this->dealService->getDealStatistics();
 
         return Inertia::render('Deals/Index', [
             'deals' => $deals,
-            'filters' => $request->only(['search', 'status']),
-            'statistics' => $dealsByStatus,
+            'clients' => Client::all(),
+            'statistics' => $statistics,
+            'filters' => $request->only(['search', 'status'])
         ]);
     }
 
-    public function store(Request $request)
+    public function create()
     {
-        $validated = $request->validate([
-            'client_id' => 'required|exists:clients,id',
-            'name' => 'required|string|max:255',
-            'value' => 'required|numeric|min:0',
-            'status' => 'required|in:new,in_progress,won,lost',
-            'description' => 'nullable|string',
+        return Inertia::render('Deals/Create', [
+            'clients' => Client::all()
         ]);
+    }
 
-        Deal::create($validated);
+    public function store(DealRequest $request)
+    {
+        $this->dealService->createDeal($request->validated());
 
-        return redirect()->back()
-            ->with('message', 'Сделка успешно создана');
+        return redirect()->route('deals.index')
+            ->with('success', 'Сделка успешно создана');
     }
 
     public function show(Deal $deal)
     {
         return Inertia::render('Deals/Show', [
-            'deal' => $deal->load('client'),
+            'deal' => $deal->load('client')
         ]);
     }
 
-    public function update(Request $request, Deal $deal)
+    public function edit(Deal $deal)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'value' => 'required|numeric|min:0',
-            'status' => 'required|in:new,in_progress,won,lost',
-            'description' => 'nullable|string',
+        return Inertia::render('Deals/Edit', [
+            'deal' => $deal->load('client'),
+            'clients' => Client::all()
         ]);
+    }
 
-        $deal->update($validated);
+    public function update(DealRequest $request, Deal $deal)
+    {
+        $this->dealService->updateDeal($deal, $request->validated());
 
-        return redirect()->back()
-            ->with('message', 'Сделка успешно обновлена');
+        return redirect()->route('deals.index')
+            ->with('success', 'Сделка успешно обновлена');
     }
 
     public function destroy(Deal $deal)
     {
-        $deal->delete();
+        $this->dealService->deleteDeal($deal);
 
         return redirect()->route('deals.index')
-            ->with('message', 'Сделка успешно удалена');
-    }
-
-    public function kanban()
-    {
-        $deals = Deal::with('client')
-            ->get()
-            ->groupBy('status');
-
-        return Inertia::render('Deals/Kanban', [
-            'deals' => $deals,
-        ]);
+            ->with('success', 'Сделка успешно удалена');
     }
 
     public function updateStatus(Request $request, Deal $deal)
     {
-        $validated = $request->validate([
-            'status' => 'required|in:new,in_progress,won,lost',
+        try {
+            $request->validate([
+                'status' => 'required|string|in:suspended,in_progress,won,lost'
+            ]);
+
+            $this->dealService->updateDealStatus($deal, $request->status);
+            $deals = $this->dealService->getDealsForKanban();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Статус сделки успешно обновлен',
+                'deals' => $deals
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error updating deal status', [
+                'deal_id' => $deal->id,
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Произошла ошибка при обновлении статуса сделки'
+            ], 500);
+        }
+    }
+
+    public function kanban()
+    {
+        return Inertia::render('Deals/Kanban', [
+            'deals' => $this->dealService->getDealsForKanban()
         ]);
-
-        $deal->update($validated);
-
-        return response()->json($deal);
     }
 } 
