@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/Components/ui/card";
+import { Input } from "@/Components/ui/input";
+import { Button } from "@/Components/ui/button";
 import { useClientsContext } from "./ClientsWidgetContext";
 import { Link } from "@inertiajs/react";
 import axios from 'axios';
@@ -30,12 +30,17 @@ function ClientsWidget() {
       if (filters.email) params.email = filters.email;
       if (filters.phone) params.phone = filters.phone;
       
-      const response = await axios.get(route('clients.widget'), { params });
-      setClients(response.data);
+      const response = await axios.get(route('clients.widget.index'), { params });
+      
+      if (response.data.success) {
+        setClients(response.data.data.data);
+      } else {
+        setError(response.data.message || "Ошибка при загрузке клиентов");
+      }
       setLoading(false);
     } catch (error) {
       console.error("Error fetching clients:", error);
-      setError("Ошибка при загрузке клиентов");
+      setError(error.response?.data?.message || "Ошибка при загрузке клиентов");
       setLoading(false);
     }
   };

@@ -30,11 +30,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Клиенты
     Route::prefix('clients')->name('clients.')->group(function () {
+        // Маршруты для виджета
+        Route::prefix('widget')->name('widget.')->group(function () {
+            Route::get('/', [ClientController::class, 'widget'])->name('index');
+            Route::post('/', [ClientController::class, 'widgetStore'])->name('store');
+        });
+
         Route::get('/', [ClientController::class, 'index'])->name('index');
         Route::get('/create', [ClientController::class, 'create'])->name('create');
         Route::post('/', [ClientController::class, 'store'])->name('store');
-        Route::get('/widget', [ClientController::class, 'widget'])->name('widget');
-        Route::post('/widget', [ClientController::class, 'widgetStore'])->name('widget.store');
         Route::get('/{client}/edit', [ClientController::class, 'edit'])->name('edit');
         Route::get('/{client}', [ClientController::class, 'show'])->name('show');
         Route::put('/{client}', [ClientController::class, 'update'])->name('update');
@@ -56,15 +60,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // Теги
-    Route::prefix('tags')->name('tags.')->group(function () {
-        Route::get('/', [TagController::class, 'index'])->name('index');
-        Route::get('/create', [TagController::class, 'create'])->name('create');
-        Route::post('/', [TagController::class, 'store'])->name('store');
-        Route::get('/{tag}/edit', [TagController::class, 'edit'])->name('edit');
-        Route::get('/{tag}', [TagController::class, 'show'])->name('show');
-        Route::put('/{tag}', [TagController::class, 'update'])->name('update');
-        Route::delete('/{tag}', [TagController::class, 'destroy'])->name('destroy');
-    });
+    Route::resource('tags', TagController::class);
 });
 
 require __DIR__.'/auth.php';
