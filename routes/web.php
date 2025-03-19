@@ -1,15 +1,12 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\StockController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DealController;
 use App\Http\Controllers\TagController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-
-Route::get('/stocks', [StockController::class, 'index'])->name('stocks.index');
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -19,10 +16,6 @@ Route::get('/', function () {
         'phpVersion' => PHP_VERSION,
     ]);
 });
-
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -35,16 +28,38 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('Dashboard');
     })->name('dashboard');
 
-    Route::get('/clients/widget', [ClientController::class, 'widget'])->name('clients.widget');
-    Route::post('/clients/widget', [ClientController::class, 'widgetStore'])->name('clients.widget.store');
-    
-    Route::resource('clients', ClientController::class);
-    Route::patch('/clients/{client}/tags', [ClientController::class, 'updateTags'])->name('clients.updateTags');
-    
-    Route::resource('deals', DealController::class);
-    Route::get('/deals/kanban', [DealController::class, 'kanban'])->name('deals.kanban');
-    Route::patch('/deals/{deal}/status', [DealController::class, 'updateStatus'])->name('deals.update-status');
+    // Клиенты
+    Route::prefix('clients')->name('clients.')->group(function () {
+        // Маршруты для виджета
+        Route::prefix('widget')->name('widget.')->group(function () {
+            Route::get('/', [ClientController::class, 'widget'])->name('index');
+            Route::post('/', [ClientController::class, 'widgetStore'])->name('store');
+        });
 
+        Route::get('/', [ClientController::class, 'index'])->name('index');
+        Route::get('/create', [ClientController::class, 'create'])->name('create');
+        Route::post('/', [ClientController::class, 'store'])->name('store');
+        Route::get('/{client}/edit', [ClientController::class, 'edit'])->name('edit');
+        Route::get('/{client}', [ClientController::class, 'show'])->name('show');
+        Route::put('/{client}', [ClientController::class, 'update'])->name('update');
+        Route::delete('/{client}', [ClientController::class, 'destroy'])->name('destroy');
+        Route::patch('/{client}/tags', [ClientController::class, 'updateTags'])->name('updateTags');
+    });
+
+    // Сделки
+    Route::prefix('deals')->name('deals.')->group(function () {
+        Route::get('/', [DealController::class, 'index'])->name('index');
+        Route::get('/create', [DealController::class, 'create'])->name('create');
+        Route::post('/', [DealController::class, 'store'])->name('store');
+        Route::get('/kanban', [DealController::class, 'kanban'])->name('kanban');
+        Route::get('/{deal}/edit', [DealController::class, 'edit'])->name('edit');
+        Route::get('/{deal}', [DealController::class, 'show'])->name('show');
+        Route::put('/{deal}', [DealController::class, 'update'])->name('update');
+        Route::delete('/{deal}', [DealController::class, 'destroy'])->name('destroy');
+        Route::patch('/{deal}/status', [DealController::class, 'updateStatus'])->name('update-status');
+    });
+
+    // Теги
     Route::resource('tags', TagController::class);
 });
 

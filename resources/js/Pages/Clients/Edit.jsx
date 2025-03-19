@@ -10,7 +10,7 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 export default function Edit({ auth, client }) {
   const [isDeleting, setIsDeleting] = useState(false);
   
-  const { data, setData, patch, processing, errors } = useForm({
+  const { data, setData, put, processing, errors } = useForm({
     name: client.name,
     email: client.email,
     phone: client.phone || "",
@@ -20,7 +20,7 @@ export default function Edit({ auth, client }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    patch(route('clients.update', client.id), {
+    put(route('clients.update', client.id), {
       onSuccess: () => {
         router.visit(route('clients.index'));
       }

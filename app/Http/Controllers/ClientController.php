@@ -30,14 +30,19 @@ class ClientController extends Controller
             });
         }
 
-        $clients = $query->latest()
-            ->paginate(10)
-            ->withQueryString();
+        $clients = $query->latest()->paginate(10);
 
         return Inertia::render('Clients/Index', [
             'clients' => $clients,
-            'filters' => $request->only(['search', 'tag']),
             'tags' => Tag::withCount('clients')->get(),
+            'filters' => $request->only(['search', 'tag'])
+        ]);
+    }
+
+    public function create()
+    {
+        return Inertia::render('Clients/Create', [
+            'tags' => Tag::all()
         ]);
     }
 
@@ -50,32 +55,35 @@ class ClientController extends Controller
             'company' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
             'tags' => 'nullable|array',
-            'tags.*' => 'exists:tags,id',
+            'tags.*' => 'integer|min:1|exists:tags,id',
         ]);
 
         $tags = $validated['tags'] ?? [];
         unset($validated['tags']);
 
         $client = Client::create($validated);
-        $client->tags()->sync($tags);
+        
+        if (!empty($tags)) {
+            $client->tags()->sync($tags);
+        }
 
         return redirect()->route('clients.index')
-            ->with('message', 'Клиент успешно создан');
+            ->with('success', 'Клиент успешно создан');
     }
 
     public function show(Client $client)
     {
         return Inertia::render('Clients/Show', [
-            'client' => $client->load('deals', 'tags'),
-            'tags' => Tag::all(),
+            'client' => $client->load('tags', 'deals'),
+            'tags' => Tag::all()
         ]);
     }
 
     public function edit(Client $client)
     {
         return Inertia::render('Clients/Edit', [
-            'client' => $client,
-            'tags' => Tag::all(),
+            'client' => $client->load('tags'),
+            'tags' => Tag::all()
         ]);
     }
 
@@ -88,7 +96,7 @@ class ClientController extends Controller
             'company' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
             'tags' => 'nullable|array',
-            'tags.*' => 'exists:tags,id',
+            'tags.*' => 'integer|min:1|exists:tags,id',
         ]);
 
         $tags = $validated['tags'] ?? [];
@@ -97,50 +105,72 @@ class ClientController extends Controller
         $client->update($validated);
         $client->tags()->sync($tags);
 
-        return back()->with('message', 'Клиент успешно обновлен');
+        return redirect()->route('clients.index')
+            ->with('success', 'Клиент успешно обновлен');
     }
 
     public function destroy(Client $client)
     {
         $client->delete();
-
         return redirect()->route('clients.index')
-            ->with('message', 'Клиент успешно удален');
+            ->with('success', 'Клиент успешно удален');
     }
 
     public function updateTags(Request $request, Client $client)
     {
         $validated = $request->validate([
             'tags' => 'required|array',
-            'tags.*' => 'exists:tags,id',
+            'tags.*' => 'integer|min:1|exists:tags,id',
         ]);
 
         $client->tags()->sync($validated['tags']);
 
         return redirect()->back()
-            ->with('message', 'Теги клиента обновлены');
+            ->with('success', 'Теги успешно обновлены');
     }
 
     public function widget(Request $request)
     {
-        $query = Client::query()
-            ->with('tags');
+        try {
+            \Log::info('Widget request received', [
+                'filters' => $request->all()
+            ]);
 
-        if ($request->has('name')) {
-            $query->where('name', 'like', '%' . $request->get('name') . '%');
+            $query = Client::query()
+                ->latest();
+
+            if ($request->filled('name')) {
+                $query->where('name', 'like', "%{$request->get('name')}%");
+            }
+
+            if ($request->filled('email')) {
+                $query->where('email', 'like', "%{$request->get('email')}%");
+            }
+
+            if ($request->filled('phone')) {
+                $query->where('phone', 'like', "%{$request->get('phone')}%");
+            }
+
+            $clients = $query->paginate(10);
+
+            \Log::info('Widget response', [
+                'clients_count' => $clients->count()
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'data' => $clients
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error in widget method: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Ошибка при загрузке клиентов'
+            ], 500);
         }
-
-        if ($request->has('email')) {
-            $query->where('email', 'like', '%' . $request->get('email') . '%');
-        }
-
-        if ($request->has('phone')) {
-            $query->where('phone', 'like', '%' . $request->get('phone') . '%');
-        }
-
-        $clients = $query->latest()->limit(5)->get();
-
-        return response()->json($clients);
     }
 
     public function widgetStore(Request $request)
@@ -148,12 +178,13 @@ class ClientController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:clients,email',
-            'phone' => 'required|string|max:20',
+            'phone' => 'nullable|string|max:20',
             'company' => 'nullable|string|max:255',
+            'notes' => 'nullable|string',
         ]);
 
         $client = Client::create($validated);
 
         return response()->json($client);
     }
-}
+} 

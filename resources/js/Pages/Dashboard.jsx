@@ -58,6 +58,8 @@ export default function Dashboard({ auth }) {
                             isDraggable={true}
                             isResizable={true}
                             margin={[20, 20]}
+                            draggableHandle=".drag-handle"
+                            useCSSTransforms={true}
                         >
                             <div key="clients" className="widget-container">
                                 <ClientsWidget />

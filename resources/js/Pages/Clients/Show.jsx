@@ -5,13 +5,13 @@ import { Button } from '@/Components/ui/button';
 import { useForm } from '@inertiajs/react';
 
 export default function Show({ auth, client, tags }) {
-    const { data, setData, patch, processing, errors } = useForm({
+    const { data, setData, put, processing, errors } = useForm({
         name: client.name,
         email: client.email,
         phone: client.phone,
         company: client.company,
         notes: client.notes,
-        tags: client.tags.map(tag => tag.id),
+        tags: client.tags?.map(tag => tag.id) || [],
     });
 
     const handleTagToggle = (tagId) => {
@@ -23,7 +23,7 @@ export default function Show({ auth, client, tags }) {
     };
 
     const handleSave = () => {
-        patch(route('clients.update', client.id), {
+        put(route('clients.update', client.id), {
             onSuccess: () => router.visit(route('clients.index'))
         });
     };
@@ -71,7 +71,7 @@ export default function Show({ auth, client, tags }) {
                                 <div>
                                     <h4 className="font-semibold mb-2">Статус клиента</h4>
                                     <div className="flex flex-wrap gap-2">
-                                        {tags.map(tag => (
+                                        {tags?.map(tag => (
                                             <Button
                                                 key={tag.id}
                                                 type="button"
@@ -107,8 +107,11 @@ export default function Show({ auth, client, tags }) {
                                                 className="p-4 border rounded-lg"
                                                 onClick={() => router.get(route('deals.show', deal.id))}
                                             >
-                                                <p className="font-medium">{deal.title}</p>
-                                                <p className="text-sm text-gray-600">Сумма: {deal.amount} ₽</p>
+                                                <p className="font-medium">{deal.name}</p>
+                                                <p className="text-sm text-gray-600">Сумма: {new Intl.NumberFormat('ru-RU', {
+                                                    style: 'currency',
+                                                    currency: 'RUB'
+                                                }).format(deal.value)}</p>
                                                 <p className="text-sm text-gray-600">Статус: {deal.status}</p>
                                             </div>
                                         ))}
