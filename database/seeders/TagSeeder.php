@@ -15,28 +15,29 @@ class TagSeeder extends Seeder
     {
         $tags = [
             [
-                'name' => 'Горячий клиент',
-                'color' => '#ef4444', // red
+                'name' => 'VIP',
+                'color' => '#FFD700',
             ],
             [
-                'name' => 'Теплый клиент',
-                'color' => '#f97316', // orange
+                'name' => 'Новый',
+                'color' => '#4CAF50',
             ],
             [
-                'name' => 'Холодный клиент',
-                'color' => '#3b82f6', // blue
+                'name' => 'Потенциальный',
+                'color' => '#2196F3',
             ],
             [
-                'name' => 'Успешная сделка',
-                'color' => '#22c55e', // green
+                'name' => 'Активный',
+                'color' => '#9C27B0',
+            ],
+            [
+                'name' => 'Неактивный',
+                'color' => '#607D8B',
             ],
         ];
 
         foreach ($tags as $tag) {
-            Tag::firstOrCreate(
-                ['name' => $tag['name']],
-                ['color' => $tag['color']]
-            );
+            Tag::create($tag);
         }
     }
 }

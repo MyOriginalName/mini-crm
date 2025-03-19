@@ -5,14 +5,14 @@ import { Card, CardContent } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 
 const statusLabels = {
-  new: 'Новая',
+  suspended: 'Приостановлена',
   in_progress: 'В работе',
   won: 'Выиграна',
   lost: 'Проиграна',
 };
 
 const statusColors = {
-  new: 'bg-blue-100 text-blue-800',
+  suspended: 'bg-gray-100 text-gray-800',
   in_progress: 'bg-yellow-100 text-yellow-800',
   won: 'bg-green-100 text-green-800',
   lost: 'bg-red-100 text-red-800',
