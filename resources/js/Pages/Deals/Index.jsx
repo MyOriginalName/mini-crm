@@ -173,7 +173,7 @@ export default function Index({ auth, deals, filters, statistics, clients }) {
                       onClick={() => window.location.href = route('deals.show', deal.id)}
                     >
                       <TableCell>{deal.name}</TableCell>
-                      <TableCell>{deal.client.name}</TableCell>
+                      <TableCell>{deal.client?.name || 'Нет клиента'}</TableCell>
                       <TableCell>
                         <span className={`px-2 py-1 rounded-full text-sm ${statusColors[deal.status]}`}>
                           {statusLabels[deal.status]}

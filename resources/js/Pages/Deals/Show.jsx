@@ -82,45 +82,54 @@ export default function Show({ auth, deal }) {
               <CardContent className="p-6">
                 <h3 className="text-lg font-medium mb-4">Клиент</h3>
                 <dl className="space-y-4">
-                  <div>
-                    <dt className="text-sm text-gray-500">Имя</dt>
-                    <dd className="font-medium">
-                      <a
-                        href={route('clients.show', deal.client.id)}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        {deal.client.name}
-                      </a>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-sm text-gray-500">Email</dt>
-                    <dd>
-                      <a
-                        href={`mailto:${deal.client.email}`}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        {deal.client.email}
-                      </a>
-                    </dd>
-                  </div>
-                  {deal.client.phone && (
+                  {deal.client ? (
+                    <>
+                      <div>
+                        <dt className="text-sm text-gray-500">Имя</dt>
+                        <dd className="font-medium">
+                          <a
+                            href={route('clients.show', deal.client.id)}
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            {deal.client.name}
+                          </a>
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-sm text-gray-500">Email</dt>
+                        <dd>
+                          <a
+                            href={`mailto:${deal.client.email}`}
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            {deal.client.email}
+                          </a>
+                        </dd>
+                      </div>
+                      {deal.client.phone && (
+                        <div>
+                          <dt className="text-sm text-gray-500">Телефон</dt>
+                          <dd>
+                            <a
+                              href={`tel:${deal.client.phone}`}
+                              className="text-blue-600 hover:text-blue-800"
+                            >
+                              {deal.client.phone}
+                            </a>
+                          </dd>
+                        </div>
+                      )}
+                      {deal.client.company && (
+                        <div>
+                          <dt className="text-sm text-gray-500">Компания</dt>
+                          <dd>{deal.client.company}</dd>
+                        </div>
+                      )}
+                    </>
+                  ) : (
                     <div>
-                      <dt className="text-sm text-gray-500">Телефон</dt>
-                      <dd>
-                        <a
-                          href={`tel:${deal.client.phone}`}
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          {deal.client.phone}
-                        </a>
-                      </dd>
-                    </div>
-                  )}
-                  {deal.client.company && (
-                    <div>
-                      <dt className="text-sm text-gray-500">Компания</dt>
-                      <dd>{deal.client.company}</dd>
+                      <dt className="text-sm text-gray-500">Клиент</dt>
+                      <dd className="text-gray-500">Клиент не указан</dd>
                     </div>
                   )}
                 </dl>

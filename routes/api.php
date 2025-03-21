@@ -3,8 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ClientController;
-use App\Http\Controllers\TaskController;
+use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\TinkoffController;
+use App\Http\Controllers\Api\DealController;
 
 Route::prefix('v1')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
@@ -23,5 +24,14 @@ Route::prefix('v1')->group(function () {
         
         // Задачи
         Route::apiResource('tasks', TaskController::class);
+
+        // Сделки
+        Route::get('deals', [DealController::class, 'index']);
+        Route::post('deals', [DealController::class, 'store']);
+        Route::get('deals/{deal}', [DealController::class, 'show']);
+        Route::put('deals/{deal}', [DealController::class, 'update']);
+        Route::patch('deals/{deal}', [DealController::class, 'update']);
+        Route::delete('deals/{deal}', [DealController::class, 'destroy']);
+        Route::put('deals/{deal}/status', [DealController::class, 'updateStatus']);
     });
 });

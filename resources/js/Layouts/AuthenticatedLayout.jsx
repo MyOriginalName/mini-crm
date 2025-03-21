@@ -29,13 +29,19 @@ export default function AuthenticatedLayout({ header, children }) {
                                     href={route('dashboard')}
                                     active={route().current('dashboard')}
                                 >
-                                    Dashboard
+                                    Дашборд
                                 </NavLink>
                                 <NavLink
                                     href={route('clients.index')}
                                     active={route().current('clients.*')}
                                 >
                                     Клиенты
+                                </NavLink>
+                                <NavLink
+                                    href={route('tasks.index')}
+                                    active={route().current('tasks.*')}
+                                >
+                                    Задачи
                                 </NavLink>
                                 <NavLink
                                     href={route('deals.index')}
@@ -145,13 +151,19 @@ export default function AuthenticatedLayout({ header, children }) {
                             href={route('dashboard')}
                             active={route().current('dashboard')}
                         >
-                            Dashboard
+                            Дашборд
                         </ResponsiveNavLink>
                         <ResponsiveNavLink 
                             href={route('clients.index')}
                             active={route().current('clients.*')}
                         >
                             Клиенты
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink 
+                            href={route('tasks.index')}
+                            active={route().current('tasks.*')}
+                        >
+                            Задачи
                         </ResponsiveNavLink>
                         <ResponsiveNavLink 
                             href={route('deals.index')}

@@ -8,8 +8,8 @@ export const STATUS_LABELS = {
 export const STATUS_ORDER = ['suspended', 'in_progress', 'won', 'lost'];
 
 export const STATUS_COLORS = {
-    suspended: 'bg-gray-50',
-    in_progress: 'bg-yellow-50',
-    won: 'bg-green-50',
-    lost: 'bg-red-50',
+    suspended: 'bg-gray-100 border border-gray-200',
+    in_progress: 'bg-yellow-100 border border-yellow-200',
+    won: 'bg-green-100 border border-green-200',
+    lost: 'bg-red-100 border border-red-200',
 }; 

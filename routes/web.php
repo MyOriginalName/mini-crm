@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DealController;
 use App\Http\Controllers\TagController;
+use App\Http\Controllers\TaskController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -61,6 +62,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Теги
     Route::resource('tags', TagController::class);
+
+    Route::resource('tasks', TaskController::class);
 });
 
 require __DIR__.'/auth.php';

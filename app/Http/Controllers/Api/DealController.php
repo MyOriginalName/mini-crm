@@ -6,6 +6,7 @@ use OpenApi\Annotations as OA;
 use App\Models\Deal;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 /**
  * @OA\Tag(
@@ -73,19 +74,25 @@ class DealController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Deal::query()->with('client');
+        $query = Deal::with('client');
 
-        if ($request->has('client_id')) {
-            $query->where('client_id', $request->get('client_id'));
-        }
-
+        // Фильтрация по статусу
         if ($request->has('status')) {
-            $query->where('status', $request->get('status'));
+            $query->where('status', $request->status);
         }
 
-        $deals = $query->latest()->get();
+        // Поиск по названию или клиенту
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhereHas('client', function($q) use ($search) {
+                      $q->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
 
-        return response()->json($deals);
+        return response()->json($query->paginate(10));
     }
 
     /**
@@ -167,23 +174,20 @@ class DealController extends Controller
      */
     public function store(Request $request)
     {
-        try {
-            $validated = $request->validate([
-                'title' => 'required|string|max:255',
-                'client_id' => 'required|integer|exists:clients,id',
-                'amount' => 'required|numeric|min:0',
-                'status' => 'required|string|in:new,in_progress,won,lost',
-            ]);
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'client_id' => 'required|exists:clients,id',
+            'value' => 'required|numeric|min:0',
+            'status' => 'required|in:suspended,in_progress,won,lost',
+            'description' => 'nullable|string'
+        ]);
 
-            $deal = Deal::create($validated);
-
-            return response()->json($deal, 201);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'message' => 'Ошибка валидации',
-                'errors' => $e->errors()
-            ], 422);
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
         }
+
+        $deal = Deal::create($request->all());
+        return response()->json($deal->load('client'), 201);
     }
 
     /**
@@ -337,23 +341,20 @@ class DealController extends Controller
      */
     public function update(Request $request, Deal $deal)
     {
-        try {
-            $validated = $request->validate([
-                'title' => 'required|string|max:255',
-                'client_id' => 'required|integer|exists:clients,id',
-                'amount' => 'required|numeric|min:0',
-                'status' => 'required|string|in:new,in_progress,won,lost',
-            ]);
+        $validator = Validator::make($request->all(), [
+            'name' => 'sometimes|string|max:255',
+            'client_id' => 'sometimes|exists:clients,id',
+            'value' => 'sometimes|numeric|min:0',
+            'status' => 'sometimes|in:suspended,in_progress,won,lost',
+            'description' => 'nullable|string'
+        ]);
 
-            $deal->update($validated);
-
-            return response()->json($deal);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'message' => 'Ошибка валидации',
-                'errors' => $e->errors()
-            ], 422);
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
         }
+
+        $deal->update($request->all());
+        return response()->json($deal->load('client'));
     }
 
     /**
@@ -396,6 +397,23 @@ class DealController extends Controller
     public function destroy(Deal $deal)
     {
         $deal->delete();
-        return response()->json(['message' => 'Сделка успешно удалена']);
+        return response()->json(null, 204);
+    }
+
+    /**
+     * Обновление статуса сделки
+     */
+    public function updateStatus(Request $request, Deal $deal)
+    {
+        $validator = Validator::make($request->all(), [
+            'status' => 'required|in:suspended,in_progress,won,lost'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $deal->update(['status' => $request->status]);
+        return response()->json($deal->load('client'));
     }
 } 
