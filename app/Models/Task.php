@@ -9,7 +9,20 @@ class Task extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['title', 'description', 'status', 'client_id', 'user_id'];
+    protected $fillable = [
+        'title',
+        'description',
+        'status',
+        'priority',
+        'deadline',
+        'user_id',
+        'client_id',
+        'deal_id',
+    ];
+
+    protected $casts = [
+        'deadline' => 'date',
+    ];
 
     /**
      * Get the client that owns the task.
@@ -29,6 +42,11 @@ class Task extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function deal()
+    {
+        return $this->belongsTo(Deal::class);
     }
 }
 

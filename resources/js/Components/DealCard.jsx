@@ -15,7 +15,7 @@ export default function DealCard({ deal, isDragging, onDragStart, onDragEnd, onC
         >
             <CardContent className="p-4">
                 <div className="font-medium">{deal.name}</div>
-                <div className="text-sm text-gray-500">{deal.client.name}</div>
+                <div className="text-sm text-gray-500">{deal.client?.name || 'Нет клиента'}</div>
                 <div className="text-sm font-medium mt-2">
                     {formatCurrency(deal.value)}
                 </div>
