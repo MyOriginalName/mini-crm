@@ -15,8 +15,13 @@ class Client extends Model
         'name',
         'email',
         'phone',
-        'company',
-        'notes',
+        'type',
+        'status',
+        'company_name',
+        'inn',
+        'kpp',
+        'address',
+        'description',
     ];
 
     protected $with = ['tags'];
@@ -40,7 +45,7 @@ class Client extends Model
     public function scopeSearch($query, $search)
     {
         if ($search) {
-            return $query->whereRaw("MATCH(name, email, phone, company) AGAINST(? IN BOOLEAN MODE)", [$search . '*']);
+            return $query->whereRaw("MATCH(name, email, phone, company_name) AGAINST(? IN BOOLEAN MODE)", [$search . '*']);
         }
         return $query;
     }
@@ -51,6 +56,22 @@ class Client extends Model
             return $query->whereHas('tags', function ($q) use ($tagId) {
                 $q->where('tags.id', $tagId);
             });
+        }
+        return $query;
+    }
+
+    public function scopeFilterByType($query, $type)
+    {
+        if ($type) {
+            return $query->where('type', $type);
+        }
+        return $query;
+    }
+
+    public function scopeFilterByStatus($query, $status)
+    {
+        if ($status) {
+            return $query->where('status', $status);
         }
         return $query;
     }

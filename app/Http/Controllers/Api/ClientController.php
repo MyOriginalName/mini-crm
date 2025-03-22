@@ -31,6 +31,20 @@ class ClientController extends Controller
      *         @OA\Schema(type="string")
      *     ),
      *     @OA\Parameter(
+     *         name="type",
+     *         in="query",
+     *         description="Фильтр по типу клиента",
+     *         required=false,
+     *         @OA\Schema(type="string", enum={"individual", "company"})
+     *     ),
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         description="Фильтр по статусу клиента",
+     *         required=false,
+     *         @OA\Schema(type="string", enum={"active", "inactive", "blocked"})
+     *     ),
+     *     @OA\Parameter(
      *         name="tag",
      *         in="query",
      *         description="Фильтр по ID тега",
@@ -47,8 +61,13 @@ class ClientController extends Controller
      *                 @OA\Property(property="name", type="string"),
      *                 @OA\Property(property="email", type="string"),
      *                 @OA\Property(property="phone", type="string"),
-     *                 @OA\Property(property="company", type="string"),
-     *                 @OA\Property(property="notes", type="string"),
+     *                 @OA\Property(property="type", type="string", enum={"individual", "company"}),
+     *                 @OA\Property(property="status", type="string", enum={"active", "inactive", "blocked"}),
+     *                 @OA\Property(property="company_name", type="string"),
+     *                 @OA\Property(property="inn", type="string"),
+     *                 @OA\Property(property="kpp", type="string"),
+     *                 @OA\Property(property="address", type="string"),
+     *                 @OA\Property(property="description", type="string"),
      *                 @OA\Property(property="tags", type="array",
      *                     @OA\Items(
      *                         @OA\Property(property="id", type="integer"),
@@ -75,8 +94,16 @@ class ClientController extends Controller
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
                   ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('company', 'like', "%{$search}%");
+                  ->orWhere('company_name', 'like', "%{$search}%");
             });
+        }
+
+        if ($request->has('type')) {
+            $query->filterByType($request->get('type'));
+        }
+
+        if ($request->has('status')) {
+            $query->filterByStatus($request->get('status'));
         }
 
         if ($request->has('tag')) {
@@ -99,12 +126,17 @@ class ClientController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"name", "email"},
+     *             required={"name", "email", "type", "status"},
      *             @OA\Property(property="name", type="string", example="Петр Петров"),
      *             @OA\Property(property="email", type="string", format="email", example="petr@example.com"),
      *             @OA\Property(property="phone", type="string", example="+79991112233"),
-     *             @OA\Property(property="company", type="string"),
-     *             @OA\Property(property="notes", type="string"),
+     *             @OA\Property(property="type", type="string", enum={"individual", "company"}),
+     *             @OA\Property(property="status", type="string", enum={"active", "inactive", "blocked"}),
+     *             @OA\Property(property="company_name", type="string"),
+     *             @OA\Property(property="inn", type="string"),
+     *             @OA\Property(property="kpp", type="string"),
+     *             @OA\Property(property="address", type="string"),
+     *             @OA\Property(property="description", type="string"),
      *             @OA\Property(
      *                 property="tags",
      *                 type="array",
@@ -121,8 +153,13 @@ class ClientController extends Controller
      *             @OA\Property(property="name", type="string"),
      *             @OA\Property(property="email", type="string"),
      *             @OA\Property(property="phone", type="string"),
-     *             @OA\Property(property="company", type="string"),
-     *             @OA\Property(property="notes", type="string"),
+     *             @OA\Property(property="type", type="string", enum={"individual", "company"}),
+     *             @OA\Property(property="status", type="string", enum={"active", "inactive", "blocked"}),
+     *             @OA\Property(property="company_name", type="string"),
+     *             @OA\Property(property="inn", type="string"),
+     *             @OA\Property(property="kpp", type="string"),
+     *             @OA\Property(property="address", type="string"),
+     *             @OA\Property(property="description", type="string"),
      *             @OA\Property(property="tags", type="array", @OA\Items(type="object",
      *                 @OA\Property(property="id", type="integer"),
      *                 @OA\Property(property="name", type="string")
@@ -146,8 +183,13 @@ class ClientController extends Controller
                 'name' => 'required|string|max:255',
                 'email' => 'required|email|unique:clients,email',
                 'phone' => 'nullable|string|max:20',
-                'company' => 'nullable|string|max:255',
-                'notes' => 'nullable|string',
+                'type' => 'required|string|in:individual,company',
+                'status' => 'required|string|in:active,inactive,blocked',
+                'company_name' => 'nullable|required_if:type,company|string|max:255',
+                'inn' => 'nullable|required_if:type,company|string|max:12',
+                'kpp' => 'nullable|string|max:9',
+                'address' => 'nullable|string|max:255',
+                'description' => 'nullable|string',
                 'tags' => 'nullable|array',
                 'tags.*' => 'integer|min:1|exists:tags,id',
             ]);
@@ -190,8 +232,13 @@ class ClientController extends Controller
      *             @OA\Property(property="name", type="string"),
      *             @OA\Property(property="email", type="string"),
      *             @OA\Property(property="phone", type="string"),
-     *             @OA\Property(property="company", type="string"),
-     *             @OA\Property(property="notes", type="string"),
+     *             @OA\Property(property="type", type="string", enum={"individual", "company"}),
+     *             @OA\Property(property="status", type="string", enum={"active", "inactive", "blocked"}),
+     *             @OA\Property(property="company_name", type="string"),
+     *             @OA\Property(property="inn", type="string"),
+     *             @OA\Property(property="kpp", type="string"),
+     *             @OA\Property(property="address", type="string"),
+     *             @OA\Property(property="description", type="string"),
      *             @OA\Property(property="tags", type="array",
      *                 @OA\Items(type="object",
      *                     @OA\Property(property="id", type="integer"),
@@ -237,12 +284,17 @@ class ClientController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"name", "email"},
+     *             required={"name", "email", "type", "status"},
      *             @OA\Property(property="name", type="string"),
      *             @OA\Property(property="email", type="string", format="email"),
      *             @OA\Property(property="phone", type="string"),
-     *             @OA\Property(property="company", type="string"),
-     *             @OA\Property(property="notes", type="string"),
+     *             @OA\Property(property="type", type="string", enum={"individual", "company"}),
+     *             @OA\Property(property="status", type="string", enum={"active", "inactive", "blocked"}),
+     *             @OA\Property(property="company_name", type="string"),
+     *             @OA\Property(property="inn", type="string"),
+     *             @OA\Property(property="kpp", type="string"),
+     *             @OA\Property(property="address", type="string"),
+     *             @OA\Property(property="description", type="string"),
      *             @OA\Property(property="tags", type="array", @OA\Items(type="integer"))
      *         )
      *     ),
@@ -254,8 +306,13 @@ class ClientController extends Controller
      *             @OA\Property(property="name", type="string"),
      *             @OA\Property(property="email", type="string"),
      *             @OA\Property(property="phone", type="string"),
-     *             @OA\Property(property="company", type="string"),
-     *             @OA\Property(property="notes", type="string"),
+     *             @OA\Property(property="type", type="string", enum={"individual", "company"}),
+     *             @OA\Property(property="status", type="string", enum={"active", "inactive", "blocked"}),
+     *             @OA\Property(property="company_name", type="string"),
+     *             @OA\Property(property="inn", type="string"),
+     *             @OA\Property(property="kpp", type="string"),
+     *             @OA\Property(property="address", type="string"),
+     *             @OA\Property(property="description", type="string"),
      *             @OA\Property(property="tags", type="array",
      *                 @OA\Items(type="object",
      *                     @OA\Property(property="id", type="integer"),
@@ -281,8 +338,13 @@ class ClientController extends Controller
                 'name' => 'required|string|max:255',
                 'email' => 'required|email|unique:clients,email,' . $client->id,
                 'phone' => 'nullable|string|max:20',
-                'company' => 'nullable|string|max:255',
-                'notes' => 'nullable|string',
+                'type' => 'required|string|in:individual,company',
+                'status' => 'required|string|in:active,inactive,blocked',
+                'company_name' => 'nullable|required_if:type,company|string|max:255',
+                'inn' => 'nullable|required_if:type,company|string|max:12',
+                'kpp' => 'nullable|string|max:9',
+                'address' => 'nullable|string|max:255',
+                'description' => 'nullable|string',
                 'tags' => 'nullable|array',
                 'tags.*' => 'integer|min:1|exists:tags,id',
             ]);
@@ -411,7 +473,9 @@ class ClientController extends Controller
      *                 @OA\Property(property="name", type="string"),
      *                 @OA\Property(property="email", type="string"),
      *                 @OA\Property(property="phone", type="string"),
-     *                 @OA\Property(property="company", type="string")
+     *                 @OA\Property(property="type", type="string", enum={"individual", "company"}),
+     *                 @OA\Property(property="status", type="string", enum={"active", "inactive", "blocked"}),
+     *                 @OA\Property(property="company_name", type="string")
      *             )
      *         )
      *     )
@@ -447,11 +511,17 @@ class ClientController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"name", "email", "phone"},
+     *             required={"name", "email", "phone", "type", "status"},
      *             @OA\Property(property="name", type="string"),
      *             @OA\Property(property="email", type="string", format="email"),
      *             @OA\Property(property="phone", type="string"),
-     *             @OA\Property(property="company", type="string")
+     *             @OA\Property(property="type", type="string", enum={"individual", "company"}),
+     *             @OA\Property(property="status", type="string", enum={"active", "inactive", "blocked"}),
+     *             @OA\Property(property="company_name", type="string"),
+     *             @OA\Property(property="inn", type="string"),
+     *             @OA\Property(property="kpp", type="string"),
+     *             @OA\Property(property="address", type="string"),
+     *             @OA\Property(property="description", type="string")
      *         )
      *     ),
      *     @OA\Response(
@@ -462,7 +532,13 @@ class ClientController extends Controller
      *             @OA\Property(property="name", type="string"),
      *             @OA\Property(property="email", type="string"),
      *             @OA\Property(property="phone", type="string"),
-     *             @OA\Property(property="company", type="string")
+     *             @OA\Property(property="type", type="string", enum={"individual", "company"}),
+     *             @OA\Property(property="status", type="string", enum={"active", "inactive", "blocked"}),
+     *             @OA\Property(property="company_name", type="string"),
+     *             @OA\Property(property="inn", type="string"),
+     *             @OA\Property(property="kpp", type="string"),
+     *             @OA\Property(property="address", type="string"),
+     *             @OA\Property(property="description", type="string")
      *         )
      *     ),
      *     @OA\Response(
@@ -482,7 +558,13 @@ class ClientController extends Controller
                 'name' => 'required|string|max:255',
                 'email' => 'required|email|unique:clients,email',
                 'phone' => 'required|string|max:20',
-                'company' => 'nullable|string|max:255',
+                'type' => 'required|string|in:individual,company',
+                'status' => 'required|string|in:active,inactive,blocked',
+                'company_name' => 'nullable|required_if:type,company|string|max:255',
+                'inn' => 'nullable|required_if:type,company|string|max:12',
+                'kpp' => 'nullable|string|max:9',
+                'address' => 'nullable|string|max:255',
+                'description' => 'nullable|string',
             ]);
 
             $client = Client::create($validated);
@@ -528,8 +610,13 @@ class ClientController extends Controller
      *             @OA\Property(property="name", type="string"),
      *             @OA\Property(property="email", type="string"),
      *             @OA\Property(property="phone", type="string"),
-     *             @OA\Property(property="company", type="string"),
-     *             @OA\Property(property="notes", type="string"),
+     *             @OA\Property(property="type", type="string", enum={"individual", "company"}),
+     *             @OA\Property(property="status", type="string", enum={"active", "inactive", "blocked"}),
+     *             @OA\Property(property="company_name", type="string"),
+     *             @OA\Property(property="inn", type="string"),
+     *             @OA\Property(property="kpp", type="string"),
+     *             @OA\Property(property="address", type="string"),
+     *             @OA\Property(property="description", type="string"),
      *             @OA\Property(property="tags", type="array",
      *                 @OA\Items(type="object",
      *                     @OA\Property(property="id", type="integer"),
