@@ -3,14 +3,20 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { Button } from '@/Components/ui/button';
 import { useForm } from '@inertiajs/react';
+import { CLIENT_STATUS_LABELS, CLIENT_TYPE_LABELS } from '@/constants/clientConstants';
 
 export default function Show({ auth, client, tags }) {
     const { data, setData, put, processing, errors } = useForm({
         name: client.name,
         email: client.email,
         phone: client.phone,
-        company: client.company,
-        notes: client.notes,
+        type: client.type,
+        status: client.status,
+        company_name: client.company_name || '',
+        inn: client.inn || '',
+        kpp: client.kpp || '',
+        address: client.address || '',
+        description: client.description || '',
         tags: client.tags?.map(tag => tag.id) || [],
     });
 
@@ -61,15 +67,29 @@ export default function Show({ auth, client, tags }) {
 
                             <div className="grid grid-cols-2 gap-6">
                                 <div>
-                                    <h4 className="font-semibold mb-2">Контактная информация</h4>
+                                    <h4 className="font-semibold mb-2">Основная информация</h4>
                                     <div className="space-y-2">
+                                        <p><span className="text-gray-600">Тип клиента:</span> {CLIENT_TYPE_LABELS[client.type]}</p>
+                                        <p><span className="text-gray-600">Статус:</span> {CLIENT_STATUS_LABELS[client.status]}</p>
                                         <p><span className="text-gray-600">Телефон:</span> {client.phone || 'Не указан'}</p>
-                                        <p><span className="text-gray-600">Компания:</span> {client.company || 'Не указана'}</p>
+                                        <p><span className="text-gray-600">Email:</span> {client.email}</p>
+                                        <p><span className="text-gray-600">Адрес:</span> {client.address || 'Не указан'}</p>
                                     </div>
                                 </div>
 
+                                {client.type === 'company' && (
+                                    <div>
+                                        <h4 className="font-semibold mb-2">Информация о компании</h4>
+                                        <div className="space-y-2">
+                                            <p><span className="text-gray-600">Название компании:</span> {client.company_name}</p>
+                                            <p><span className="text-gray-600">ИНН:</span> {client.inn}</p>
+                                            <p><span className="text-gray-600">КПП:</span> {client.kpp || 'Не указан'}</p>
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div>
-                                    <h4 className="font-semibold mb-2">Статус клиента</h4>
+                                    <h4 className="font-semibold mb-2">Теги</h4>
                                     <div className="flex flex-wrap gap-2">
                                         {tags?.map(tag => (
                                             <Button
@@ -90,10 +110,10 @@ export default function Show({ auth, client, tags }) {
                                 </div>
                             </div>
 
-                            {client.notes && (
+                            {client.description && (
                                 <div>
-                                    <h4 className="font-semibold mb-2">Заметки</h4>
-                                    <p className="text-gray-600 whitespace-pre-wrap">{client.notes}</p>
+                                    <h4 className="font-semibold mb-2">Описание</h4>
+                                    <p className="text-gray-600 whitespace-pre-wrap">{client.description}</p>
                                 </div>
                             )}
 
@@ -104,7 +124,7 @@ export default function Show({ auth, client, tags }) {
                                         {client.deals.map(deal => (
                                             <div
                                                 key={deal.id}
-                                                className="p-4 border rounded-lg"
+                                                className="p-4 border rounded-lg cursor-pointer hover:bg-gray-50"
                                                 onClick={() => router.get(route('deals.show', deal.id))}
                                             >
                                                 <p className="font-medium">{deal.name}</p>

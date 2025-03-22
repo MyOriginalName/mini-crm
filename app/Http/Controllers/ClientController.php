@@ -20,8 +20,16 @@ class ClientController extends Controller
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
                   ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('company', 'like', "%{$search}%");
+                  ->orWhere('company_name', 'like', "%{$search}%");
             });
+        }
+
+        if ($request->has('type')) {
+            $query->filterByType($request->get('type'));
+        }
+
+        if ($request->has('status')) {
+            $query->filterByStatus($request->get('status'));
         }
 
         if ($request->has('tag')) {
@@ -35,7 +43,7 @@ class ClientController extends Controller
         return Inertia::render('Clients/Index', [
             'clients' => $clients,
             'tags' => Tag::withCount('clients')->get(),
-            'filters' => $request->only(['search', 'tag'])
+            'filters' => $request->only(['search', 'tag', 'type', 'status'])
         ]);
     }
 
@@ -52,8 +60,13 @@ class ClientController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:clients,email',
             'phone' => 'nullable|string|max:20',
-            'company' => 'nullable|string|max:255',
-            'notes' => 'nullable|string',
+            'type' => 'required|string|in:individual,company',
+            'status' => 'required|string|in:active,inactive,blocked',
+            'company_name' => 'nullable|required_if:type,company|string|max:255',
+            'inn' => 'nullable|required_if:type,company|string|max:12',
+            'kpp' => 'nullable|string|max:9',
+            'address' => 'nullable|string|max:255',
+            'description' => 'nullable|string',
             'tags' => 'nullable|array',
             'tags.*' => 'integer|min:1|exists:tags,id',
         ]);
@@ -73,9 +86,11 @@ class ClientController extends Controller
 
     public function show(Client $client)
     {
+        $client->load(['tags', 'deals']);
+        
         return Inertia::render('Clients/Show', [
-            'client' => $client->load('tags', 'deals'),
-            'tags' => Tag::all()
+            'client' => $client,
+            'tags' => Tag::all(),
         ]);
     }
 
@@ -91,22 +106,26 @@ class ClientController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:clients,email,' . $client->id,
+            'email' => 'required|email|max:255|unique:clients,email,' . $client->id,
             'phone' => 'nullable|string|max:20',
-            'company' => 'nullable|string|max:255',
-            'notes' => 'nullable|string',
-            'tags' => 'nullable|array',
-            'tags.*' => 'integer|min:1|exists:tags,id',
+            'type' => 'required|string|in:individual,company',
+            'status' => 'required|string|in:active,inactive,blocked',
+            'company_name' => 'required_if:type,company|nullable|string|max:255',
+            'inn' => 'required_if:type,company|nullable|string|max:12',
+            'kpp' => 'nullable|string|max:9',
+            'address' => 'nullable|string|max:255',
+            'description' => 'nullable|string',
+            'tags' => 'array',
+            'tags.*' => 'exists:tags,id',
         ]);
 
-        $tags = $validated['tags'] ?? [];
-        unset($validated['tags']);
-
         $client->update($validated);
-        $client->tags()->sync($tags);
+        
+        if (isset($validated['tags'])) {
+            $client->tags()->sync($validated['tags']);
+        }
 
-        return redirect()->route('clients.index')
-            ->with('success', 'Клиент успешно обновлен');
+        return redirect()->route('clients.index');
     }
 
     public function destroy(Client $client)
@@ -179,8 +198,13 @@ class ClientController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:clients,email',
             'phone' => 'nullable|string|max:20',
-            'company' => 'nullable|string|max:255',
-            'notes' => 'nullable|string',
+            'type' => 'required|string|in:individual,company',
+            'status' => 'required|string|in:active,inactive,blocked',
+            'company_name' => 'nullable|required_if:type,company|string|max:255',
+            'inn' => 'nullable|required_if:type,company|string|max:12',
+            'kpp' => 'nullable|string|max:9',
+            'address' => 'nullable|string|max:255',
+            'description' => 'nullable|string',
         ]);
 
         $client = Client::create($validated);

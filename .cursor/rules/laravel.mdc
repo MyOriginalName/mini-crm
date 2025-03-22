@@ -1,0 +1,12 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+Always write Laravel code following: SOLID/DRY/KISS principles PSR-12 coding standard Official Laravel guidelines Eloquent ORM best practices Security (validation, SQL injection, CSRF) Show multiple solutions with comments.
+
+Always generate secure code considering Validation of all input data Prepared SQL queries CSRF protection for forms (where necessary) Roles and permissions (spatie/laravel-permission) Error handling without data leaks
+
+Follow all relevant design patterns and good practices of programming, algorithms and data structures
+
