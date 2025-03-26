@@ -1,52 +1,37 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { router } from "@inertiajs/react";
+import { TASK_STATUS_LABELS, TASK_PRIORITY_LABELS } from '@/constants/taskConstants';
 
-export default function TaskForm({ isEditing = false, id = null }) {
-  
+export default function TaskForm({ isEditing = false, task = null, clients = [], deals = [], users = [] }) {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     status: "pending",
+    priority: "medium",
     due_date: "",
-    client_id: ""
+    client_id: "",
+    deal_id: "",
+    user_id: ""
   });
   
-  const [clients, setClients] = useState([]);
-  const [loading, setLoading] = useState(isEditing);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
 
   useEffect(() => {
-    fetchClients();
-    if (isEditing && id) {
-      fetchTask(id);
+    if (isEditing && task) {
+      setFormData({
+        title: task.title,
+        description: task.description || "",
+        status: task.status,
+        priority: task.priority,
+        due_date: task.due_date ? new Date(task.due_date).toISOString().split('T')[0] : "",
+        client_id: task.client_id || "",
+        deal_id: task.deal_id || "",
+        user_id: task.user_id || ""
+      });
     }
-  }, [isEditing, id]);
-
-  const fetchClients = async () => {
-    try {
-      const response = await axios.get("/api/v1/clients");
-      setClients(response.data.data);
-    } catch (err) {
-      console.error("Error fetching clients:", err);
-    }
-  };
-
-  const fetchTask = async (taskId) => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`/api/v1/tasks/${taskId}`);
-      setFormData(response.data.data);
-      setError(null);
-    } catch (err) {
-      setError("Failed to load task data. Please try again.");
-      console.error("Error fetching task:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [isEditing, task]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -63,72 +48,51 @@ export default function TaskForm({ isEditing = false, id = null }) {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
     setFieldErrors({});
 
-    try {
-      if (isEditing) {
-        await axios.put(`/api/v1/tasks/${id}`, formData);
-      } else {
-        await axios.post("/api/v1/tasks", formData);
-      }
-      router.visit("/tasks");
-    } catch (err) {
-      console.error("Error submitting form:", err);
-      
-      if (err.response?.data?.errors) {
-        setFieldErrors(err.response.data.errors);
-      } else {
-        setError(
-          isEditing 
-            ? "Failed to update task. Please try again." 
-            : "Failed to create task. Please try again."
-        );
-      }
-    } finally {
-      setSubmitting(false);
+    if (isEditing) {
+      router.put(route('tasks.update', task.id), formData, {
+        onSuccess: () => {
+          router.visit(route('tasks.index'));
+        },
+        onError: (errors) => {
+          setFieldErrors(errors);
+          setSubmitting(false);
+        }
+      });
+    } else {
+      router.post(route('tasks.store'), formData, {
+        onSuccess: () => {
+          router.visit(route('tasks.index'));
+        },
+        onError: (errors) => {
+          setFieldErrors(errors);
+          setSubmitting(false);
+        }
+      });
     }
   };
 
-  if (loading) {
-    return (
-      <div className="text-center py-10">
-        <div className="spinner"></div>
-        <p className="mt-2">Loading task data...</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">
-        {isEditing ? "Edit Task" : "Add New Task"}
-      </h1>
-
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-        <div className="mb-4">
+    <div className="max-w-2xl mx-auto p-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="title">
-            Title
+            Название
           </label>
           <input
             className={`shadow appearance-none border ${
               fieldErrors.title ? "border-red-500" : "border-gray-300"
             } rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline`}
             id="title"
-            type="text"
             name="title"
             value={formData.title}
             onChange={handleChange}
-            placeholder="Task Title"
+            placeholder="Название задачи"
             required
           />
           {fieldErrors.title && (
@@ -136,9 +100,9 @@ export default function TaskForm({ isEditing = false, id = null }) {
           )}
         </div>
 
-        <div className="mb-4">
+        <div>
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="description">
-            Description
+            Описание
           </label>
           <textarea
             className={`shadow appearance-none border ${
@@ -148,7 +112,7 @@ export default function TaskForm({ isEditing = false, id = null }) {
             name="description"
             value={formData.description}
             onChange={handleChange}
-            placeholder="Task Description"
+            placeholder="Описание задачи"
             rows="4"
           />
           {fieldErrors.description && (
@@ -156,9 +120,9 @@ export default function TaskForm({ isEditing = false, id = null }) {
           )}
         </div>
 
-        <div className="mb-4">
+        <div>
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="status">
-            Status
+            Статус
           </label>
           <select
             className={`shadow appearance-none border ${
@@ -170,25 +134,48 @@ export default function TaskForm({ isEditing = false, id = null }) {
             onChange={handleChange}
             required
           >
-            <option value="pending">Pending</option>
-            <option value="in_progress">In Progress</option>
-            <option value="completed">Completed</option>
+            {Object.entries(TASK_STATUS_LABELS).map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
           </select>
           {fieldErrors.status && (
             <p className="text-red-500 text-xs italic mt-1">{fieldErrors.status[0]}</p>
           )}
         </div>
 
-        <div className="mb-4">
+        <div>
+          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="priority">
+            Приоритет
+          </label>
+          <select
+            className={`shadow appearance-none border ${
+              fieldErrors.priority ? "border-red-500" : "border-gray-300"
+            } rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline`}
+            id="priority"
+            name="priority"
+            value={formData.priority}
+            onChange={handleChange}
+            required
+          >
+            {Object.entries(TASK_PRIORITY_LABELS).map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </select>
+          {fieldErrors.priority && (
+            <p className="text-red-500 text-xs italic mt-1">{fieldErrors.priority[0]}</p>
+          )}
+        </div>
+
+        <div>
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="due_date">
-            Due Date
+            Срок выполнения
           </label>
           <input
+            type="date"
             className={`shadow appearance-none border ${
               fieldErrors.due_date ? "border-red-500" : "border-gray-300"
             } rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline`}
             id="due_date"
-            type="date"
             name="due_date"
             value={formData.due_date}
             onChange={handleChange}
@@ -199,9 +186,33 @@ export default function TaskForm({ isEditing = false, id = null }) {
           )}
         </div>
 
-        <div className="mb-6">
+        <div>
+          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="user_id">
+            Исполнитель
+          </label>
+          <select
+            className={`shadow appearance-none border ${
+              fieldErrors.user_id ? "border-red-500" : "border-gray-300"
+            } rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline`}
+            id="user_id"
+            name="user_id"
+            value={formData.user_id}
+            onChange={handleChange}
+            required
+          >
+            <option value="">Выберите исполнителя</option>
+            {users.map((user) => (
+              <option key={user.id} value={user.id}>{user.name}</option>
+            ))}
+          </select>
+          {fieldErrors.user_id && (
+            <p className="text-red-500 text-xs italic mt-1">{fieldErrors.user_id[0]}</p>
+          )}
+        </div>
+
+        <div>
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="client_id">
-            Client
+            Клиент
           </label>
           <select
             className={`shadow appearance-none border ${
@@ -213,15 +224,36 @@ export default function TaskForm({ isEditing = false, id = null }) {
             onChange={handleChange}
             required
           >
-            <option value="">Select a client</option>
-            {clients.map(client => (
-              <option key={client.id} value={client.id}>
-                {client.name}
-              </option>
+            <option value="">Выберите клиента</option>
+            {clients.map((client) => (
+              <option key={client.id} value={client.id}>{client.name}</option>
             ))}
           </select>
           {fieldErrors.client_id && (
             <p className="text-red-500 text-xs italic mt-1">{fieldErrors.client_id[0]}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="deal_id">
+            Сделка
+          </label>
+          <select
+            className={`shadow appearance-none border ${
+              fieldErrors.deal_id ? "border-red-500" : "border-gray-300"
+            } rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline`}
+            id="deal_id"
+            name="deal_id"
+            value={formData.deal_id}
+            onChange={handleChange}
+          >
+            <option value="">Выберите сделку</option>
+            {deals.map((deal) => (
+              <option key={deal.id} value={deal.id}>{deal.name}</option>
+            ))}
+          </select>
+          {fieldErrors.deal_id && (
+            <p className="text-red-500 text-xs italic mt-1">{fieldErrors.deal_id[0]}</p>
           )}
         </div>
 
@@ -231,14 +263,14 @@ export default function TaskForm({ isEditing = false, id = null }) {
             type="submit"
             disabled={submitting}
           >
-            {submitting ? "Saving..." : isEditing ? "Update Task" : "Create Task"}
+            {submitting ? "Сохранение..." : isEditing ? "Обновить задачу" : "Создать задачу"}
           </button>
           <button
             className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
             type="button"
-            onClick={() => navigate("/tasks")}
+            onClick={() => router.visit(route('tasks.index'))}
           >
-            Cancel
+            Отмена
           </button>
         </div>
       </form>

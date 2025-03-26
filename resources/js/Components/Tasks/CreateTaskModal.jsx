@@ -4,7 +4,7 @@ import { Label } from "@/Components/ui/label";
 import { Input } from "@/Components/ui/input";
 import { Select } from "@/Components/ui/select";
 import { Button } from "@/Components/ui/button";
-import { STATUS_LABELS, PRIORITY_LABELS, INITIAL_TASK_STATE } from '@/constants/taskConstants';
+import { TASK_STATUS_LABELS, TASK_PRIORITY_LABELS, INITIAL_TASK_STATE } from '@/constants/taskConstants';
 
 export default function CreateTaskModal({
   isOpen,
@@ -56,7 +56,7 @@ export default function CreateTaskModal({
               onChange={(e) => handleChange('status', e.target.value)}
               required
             >
-              {Object.entries(STATUS_LABELS).map(([value, label]) => (
+              {Object.entries(TASK_STATUS_LABELS).map(([value, label]) => (
                 <option key={value} value={value}>{label}</option>
               ))}
             </Select>
@@ -70,7 +70,7 @@ export default function CreateTaskModal({
               onChange={(e) => handleChange('priority', e.target.value)}
               required
             >
-              {Object.entries(PRIORITY_LABELS).map(([value, label]) => (
+              {Object.entries(TASK_PRIORITY_LABELS).map(([value, label]) => (
                 <option key={value} value={value}>{label}</option>
               ))}
             </Select>

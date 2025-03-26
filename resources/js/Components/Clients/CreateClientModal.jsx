@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { CLIENT_STATUS_LABELS, CLIENT_TYPE_LABELS, CLIENT_TYPE, CLIENT_STATUS } from '@/constants/clientConstants';
-import { useForm } from '@/hooks/useForm';
+import { useForm } from '@inertiajs/react';
 import FormModal from '@/Components/Forms/FormModal';
 import FormField from '@/Components/Forms/FormField';
 
@@ -10,22 +10,35 @@ export default function CreateClientModal({
   onOpenChange,
   onSubmit,
   client,
+  onClientChange,
   mode = 'create'
 }) {
   const {
-    values,
+    data,
+    setData,
     errors,
-    isSubmitting,
-    handleChange,
-    handleSubmit,
-    setValues,
-  } = useForm(client, onSubmit);
-
-  const isCompany = values.type === CLIENT_TYPE.company;
+    processing,
+    reset,
+  } = useForm(client);
 
   React.useEffect(() => {
-    setValues(client);
-  }, [client, setValues]);
+    reset(client);
+  }, [client, reset]);
+
+  const handleChange = (field, value) => {
+    setData(field, value);
+    onClientChange?.({
+      ...data,
+      [field]: value
+    });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit(data);
+  };
+
+  const isCompany = data.type === CLIENT_TYPE.company;
 
   const typeOptions = Object.entries(CLIENT_TYPE_LABELS).map(([value, label]) => ({
     value,
@@ -43,14 +56,14 @@ export default function CreateClientModal({
       onOpenChange={onOpenChange}
       title={mode === 'create' ? 'Создать клиента' : 'Редактировать клиента'}
       onSubmit={handleSubmit}
-      isSubmitting={isSubmitting}
+      isSubmitting={processing}
       submitLabel={mode === 'create' ? 'Создать' : 'Сохранить'}
     >
       <FormField
         type="select"
         label="Тип клиента"
         name="type"
-        value={values.type}
+        value={data.type}
         onChange={handleChange}
         error={errors.type}
         required
@@ -60,7 +73,7 @@ export default function CreateClientModal({
       <FormField
         label={isCompany ? 'Контактное лицо' : 'ФИО'}
         name="name"
-        value={values.name}
+        value={data.name}
         onChange={handleChange}
         error={errors.name}
         required
@@ -72,7 +85,7 @@ export default function CreateClientModal({
           <FormField
             label="Название компании"
             name="company_name"
-            value={values.company_name}
+            value={data.company_name}
             onChange={handleChange}
             error={errors.company_name}
             required
@@ -82,7 +95,7 @@ export default function CreateClientModal({
           <FormField
             label="ИНН"
             name="inn"
-            value={values.inn}
+            value={data.inn}
             onChange={handleChange}
             error={errors.inn}
             required
@@ -92,7 +105,7 @@ export default function CreateClientModal({
           <FormField
             label="КПП"
             name="kpp"
-            value={values.kpp}
+            value={data.kpp}
             onChange={handleChange}
             error={errors.kpp}
             placeholder="Введите КПП"
@@ -104,7 +117,7 @@ export default function CreateClientModal({
         type="email"
         label="Email"
         name="email"
-        value={values.email}
+        value={data.email}
         onChange={handleChange}
         error={errors.email}
         required
@@ -115,7 +128,7 @@ export default function CreateClientModal({
         type="tel"
         label="Телефон"
         name="phone"
-        value={values.phone}
+        value={data.phone}
         onChange={handleChange}
         error={errors.phone}
         required
@@ -125,7 +138,7 @@ export default function CreateClientModal({
       <FormField
         label="Адрес"
         name="address"
-        value={values.address}
+        value={data.address}
         onChange={handleChange}
         error={errors.address}
         placeholder="Введите адрес"
@@ -135,7 +148,7 @@ export default function CreateClientModal({
         type="textarea"
         label="Описание"
         name="description"
-        value={values.description}
+        value={data.description}
         onChange={handleChange}
         error={errors.description}
         placeholder="Введите описание"
@@ -146,7 +159,7 @@ export default function CreateClientModal({
           type="select"
           label="Статус"
           name="status"
-          value={values.status}
+          value={data.status}
           onChange={handleChange}
           error={errors.status}
           required
@@ -161,6 +174,7 @@ CreateClientModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onOpenChange: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
+  onClientChange: PropTypes.func,
   client: PropTypes.shape({
     name: PropTypes.string.isRequired,
     email: PropTypes.string.isRequired,

@@ -50,14 +50,17 @@ export default function Index({ auth, clients, filters: initialFilters }) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newClient, setNewClient] = useState(INITIAL_CLIENT_STATE);
 
-  const handleCreateClient = (e) => {
-    e.preventDefault();
-    router.post(route('clients.store'), newClient, {
+  const handleCreateClient = (formData) => {
+    router.post(route('clients.store'), formData, {
       onSuccess: () => {
         setIsCreateModalOpen(false);
         setNewClient(INITIAL_CLIENT_STATE);
       }
     });
+  };
+
+  const handleClientChange = (updatedClient) => {
+    setNewClient(updatedClient);
   };
 
   return (
@@ -95,7 +98,7 @@ export default function Index({ auth, clients, filters: initialFilters }) {
             onOpenChange={setIsCreateModalOpen}
             onSubmit={handleCreateClient}
             client={newClient}
-            onClientChange={setNewClient}
+            onClientChange={handleClientChange}
           />
         </div>
       </div>

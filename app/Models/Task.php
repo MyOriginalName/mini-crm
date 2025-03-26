@@ -14,14 +14,14 @@ class Task extends Model
         'description',
         'status',
         'priority',
-        'deadline',
+        'due_date',
         'user_id',
         'client_id',
         'deal_id',
     ];
 
     protected $casts = [
-        'deadline' => 'date',
+        'due_date' => 'date',
     ];
 
     /**

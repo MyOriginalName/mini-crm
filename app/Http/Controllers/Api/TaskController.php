@@ -198,20 +198,15 @@ class TaskController extends Controller
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'status' => 'required|in:todo,in_progress,done,cancelled',
-            'priority' => 'required|in:high,medium,low',
-            'deadline' => 'required|date',
-            'user_id' => 'required|exists:users,id',
-            'client_id' => 'nullable|exists:clients,id',
+            'status' => 'required|in:pending,in_progress,completed',
+            'priority' => 'required|in:low,medium,high',
+            'due_date' => 'nullable|date',
+            'client_id' => 'required|exists:clients,id',
             'deal_id' => 'nullable|exists:deals,id',
         ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
 
         $task = Task::create($request->all());
         return response()->json($task->load('user', 'client', 'deal'), 201);
