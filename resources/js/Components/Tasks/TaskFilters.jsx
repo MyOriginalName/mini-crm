@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Select } from '@/Components/ui/select';
 import { Button } from '@/Components/ui/button';
-import { STATUS_LABELS, PRIORITY_LABELS } from '@/constants/taskConstants';
+import { TASK_STATUS_LABELS, TASK_PRIORITY_LABELS } from '@/constants/taskConstants';
 
 export default function TaskFilters({
   filters,
@@ -38,7 +38,7 @@ export default function TaskFilters({
                   className="h-9"
                 >
                   <option value="">Все статусы</option>
-                  {Object.entries(STATUS_LABELS).map(([value, label]) => (
+                  {Object.entries(TASK_STATUS_LABELS).map(([value, label]) => (
                     <option key={value} value={value}>{label}</option>
                   ))}
                 </Select>
@@ -48,7 +48,7 @@ export default function TaskFilters({
                   className="h-9"
                 >
                   <option value="">Все приоритеты</option>
-                  {Object.entries(PRIORITY_LABELS).map(([value, label]) => (
+                  {Object.entries(TASK_PRIORITY_LABELS).map(([value, label]) => (
                     <option key={value} value={value}>{label}</option>
                   ))}
                 </Select>

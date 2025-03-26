@@ -16,6 +16,8 @@ export default function ClientForm({ client = null, onSuccess }) {
         company: client?.company || '',
         notes: client?.notes || '',
         tags: client?.tags?.map(tag => tag.id) || [],
+        type: client?.type || 'individual',
+        status: client?.status || 'active',
     });
 
     const handleSubmit = (e) => {
@@ -100,6 +102,35 @@ export default function ClientForm({ client = null, onSuccess }) {
                     ))}
                 </div>
                 {errors.tags && <p className="text-sm text-red-500">{errors.tags}</p>}
+            </div>
+
+            <div>
+                <Label htmlFor="type">Тип клиента</Label>
+                <select
+                    id="type"
+                    value={data.type}
+                    onChange={e => setData('type', e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                >
+                    <option value="individual">Физическое лицо</option>
+                    <option value="company">Компания</option>
+                </select>
+                {errors.type && <p className="text-sm text-red-500">{errors.type}</p>}
+            </div>
+
+            <div>
+                <Label htmlFor="status">Статус</Label>
+                <select
+                    id="status"
+                    value={data.status}
+                    onChange={e => setData('status', e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                >
+                    <option value="active">Активный</option>
+                    <option value="inactive">Неактивный</option>
+                    <option value="blocked">Заблокирован</option>
+                </select>
+                {errors.status && <p className="text-sm text-red-500">{errors.status}</p>}
             </div>
 
             <div>
