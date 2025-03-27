@@ -21,7 +21,7 @@ const cleanFilters = (filters) => {
   );
 };
 
-export default function Index({ auth, clients, filters: initialFilters }) {
+export default function Index({ auth, clients, filters: initialFilters, can }) {
   const [filters, setFilters] = useState(initialFilters);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
@@ -71,13 +71,15 @@ export default function Index({ auth, clients, filters: initialFilters }) {
         <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-semibold">Клиенты</h2>
-            <Button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="flex items-center gap-2"
-            >
-              <Plus className="h-5 w-5" />
-              Новый клиент
-            </Button>
+            {can.create && (
+              <Button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="flex items-center gap-2"
+              >
+                <Plus className="h-5 w-5" />
+                Новый клиент
+              </Button>
+            )}
           </div>
 
           <ClientFilters
@@ -89,7 +91,7 @@ export default function Index({ auth, clients, filters: initialFilters }) {
 
           <Card>
             <CardContent className="p-6">
-              <ClientList clients={clients} />
+              <ClientList clients={clients} can={can} />
             </CardContent>
           </Card>
 

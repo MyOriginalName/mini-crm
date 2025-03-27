@@ -16,6 +16,11 @@ use Illuminate\Support\Facades\Validator;
  */
 class TaskController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth:sanctum');
+    }
+
     /**
      * @OA\Get(
      *     path="/api/v1/tasks",
@@ -115,7 +120,16 @@ class TaskController extends Controller
      */
     public function index(Request $request)
     {
+        if (!auth()->user()->hasAnyPermission(['view tasks', 'view own tasks'])) {
+            return response()->json(['message' => 'Доступ запрещен'], 403);
+        }
+
         $query = Task::with(['user', 'client', 'deal']);
+
+        if (!auth()->user()->hasPermissionTo('view tasks') && 
+            auth()->user()->hasPermissionTo('view own tasks')) {
+            $query->where('user_id', auth()->id());
+        }
 
         if ($request->has('search')) {
             $search = $request->get('search');
@@ -198,6 +212,10 @@ class TaskController extends Controller
      */
     public function store(Request $request)
     {
+        if (!auth()->user()->can('create tasks')) {
+            return response()->json(['message' => 'Доступ запрещен'], 403);
+        }
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -208,7 +226,10 @@ class TaskController extends Controller
             'deal_id' => 'nullable|exists:deals,id',
         ]);
 
-        $task = Task::create($request->all());
+        $data = $request->all();
+        $data['user_id'] = auth()->id();
+
+        $task = Task::create($data);
         return response()->json($task->load('user', 'client', 'deal'), 201);
     }
 
@@ -269,6 +290,10 @@ class TaskController extends Controller
      */
     public function show(Task $task)
     {
+        if (!$this->canViewTask($task)) {
+            return response()->json(['message' => 'Доступ запрещен'], 403);
+        }
+
         return response()->json($task->load('user', 'client', 'deal'));
     }
 
@@ -332,6 +357,10 @@ class TaskController extends Controller
      */
     public function update(Request $request, Task $task)
     {
+        if (!$this->canEditTask($task)) {
+            return response()->json(['message' => 'Доступ запрещен'], 403);
+        }
+
         $validator = Validator::make($request->all(), [
             'title' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
@@ -377,7 +406,29 @@ class TaskController extends Controller
      */
     public function destroy(Task $task)
     {
+        if (!auth()->user()->can('delete tasks')) {
+            return response()->json(['message' => 'Доступ запрещен'], 403);
+        }
+
         $task->delete();
         return response()->json(null, 204);
+    }
+
+    protected function canViewTask(Task $task): bool
+    {
+        if (auth()->user()->can('view tasks')) {
+            return true;
+        }
+
+        return auth()->user()->can('view own tasks') && $task->user_id === auth()->id();
+    }
+
+    protected function canEditTask(Task $task): bool
+    {
+        if (auth()->user()->can('edit tasks')) {
+            return true;
+        }
+
+        return auth()->user()->can('edit own tasks') && $task->user_id === auth()->id();
     }
 } 

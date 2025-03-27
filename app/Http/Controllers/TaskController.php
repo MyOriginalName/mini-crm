@@ -14,44 +14,40 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Services\TaskService;
 
 class TaskController extends Controller
 {
+    public function __construct(
+        private readonly TaskService $taskService
+    ) {
+        $this->middleware('auth');
+    }
+
     /**
      * Отображает список задач
      */
     public function index(): Response
     {
-        $query = Task::with(['user', 'client', 'deal'])
-            ->when(request('search'), function ($query, $search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('title', 'like', "%{$search}%")
-                      ->orWhere('description', 'like', "%{$search}%");
-                });
-            })
-            ->when(request('status'), function ($query, $status) {
-                $query->where('status', $status);
-            })
-            ->when(request('priority'), function ($query, $priority) {
-                $query->where('priority', $priority);
-            })
-            ->when(request('client_id'), function ($query, $clientId) {
-                $query->where('client_id', $clientId);
-            })
-            ->when(request('deal_id'), function ($query, $dealId) {
-                $query->where('deal_id', $dealId);
-            })
-            ->when(request('user_id'), function ($query, $userId) {
-                $query->where('user_id', $userId);
-            })
-            ->latest();
+        if (!auth()->user()->hasAnyPermission(['view tasks', 'view own tasks'])) {
+            abort(403);
+        }
+
+        $tasks = $this->taskService->getAllTasks(request()->only(['search', 'status', 'priority', 'client_id', 'deal_id', 'user_id']));
+        $statistics = $this->taskService->getTaskStatistics();
 
         return Inertia::render('Tasks/Index', [
-            'tasks' => new TaskCollection($query->paginate(10)),
+            'tasks' => new TaskCollection($tasks),
+            'statistics' => $statistics,
             'filters' => request()->only(['search', 'status', 'priority', 'client_id', 'deal_id', 'user_id']),
             'clients' => Client::select('id', 'name')->get(),
             'deals' => Deal::select('id', 'name')->get(),
             'users' => User::select('id', 'name')->get(),
+            'can' => [
+                'create' => auth()->user()->can('create tasks'),
+                'edit' => auth()->user()->can('edit tasks'),
+                'delete' => auth()->user()->can('delete tasks'),
+            ]
         ]);
     }
 
@@ -60,6 +56,10 @@ class TaskController extends Controller
      */
     public function create(): Response
     {
+        if (!auth()->user()->can('create tasks')) {
+            abort(403);
+        }
+
         return Inertia::render('Tasks/Create', [
             'clients' => Client::select('id', 'name')->get(),
             'deals' => Deal::select('id', 'name')->get(),
@@ -72,9 +72,14 @@ class TaskController extends Controller
      */
     public function store(StoreRequest $request): RedirectResponse
     {
+        if (!auth()->user()->can('create tasks')) {
+            abort(403);
+        }
+
         try {
             $validated = $request->validated();
-            $task = Task::create($validated);
+            $validated['user_id'] = auth()->id();
+            $task = $this->taskService->createTask($validated);
 
             Log::info('Задача создана', ['task_id' => $task->id]);
 
@@ -95,6 +100,10 @@ class TaskController extends Controller
      */
     public function show(Task $task): Response
     {
+        if (!$this->canViewTask($task)) {
+            abort(403);
+        }
+
         $task->load(['user', 'client', 'deal']);
 
         return Inertia::render('Tasks/Show', [
@@ -102,6 +111,10 @@ class TaskController extends Controller
             'clients' => Client::select('id', 'name')->get(),
             'deals' => Deal::select('id', 'name')->get(),
             'users' => User::select('id', 'name')->get(),
+            'can' => [
+                'edit' => $this->canEditTask($task),
+                'delete' => auth()->user()->can('delete tasks'),
+            ]
         ]);
     }
 
@@ -110,14 +123,17 @@ class TaskController extends Controller
      */
     public function update(UpdateRequest $request, Task $task): RedirectResponse
     {
+        if (!$this->canEditTask($task)) {
+            abort(403);
+        }
+
         try {
             Log::info('Получен запрос на обновление задачи', [
                 'task_id' => $task->id,
                 'request_data' => $request->all()
             ]);
 
-            $validated = $request->validated();
-            $task->update($validated);
+            $this->taskService->updateTask($task, $request->validated());
 
             Log::info('Задача успешно обновлена', ['task' => $task->toArray()]);
 
@@ -139,9 +155,13 @@ class TaskController extends Controller
      */
     public function destroy(Task $task): RedirectResponse
     {
+        if (!auth()->user()->can('delete tasks')) {
+            abort(403);
+        }
+
         try {
             $taskId = $task->id;
-            $task->delete();
+            $this->taskService->deleteTask($task);
 
             Log::info('Задача удалена', ['task_id' => $taskId]);
 
@@ -155,5 +175,23 @@ class TaskController extends Controller
 
             return back()->with('error', 'Произошла ошибка при удалении задачи.');
         }
+    }
+
+    protected function canViewTask(Task $task): bool
+    {
+        if (auth()->user()->can('view tasks')) {
+            return true;
+        }
+
+        return auth()->user()->can('view own tasks') && $task->user_id === auth()->id();
+    }
+
+    protected function canEditTask(Task $task): bool
+    {
+        if (auth()->user()->can('edit tasks')) {
+            return true;
+        }
+
+        return auth()->user()->can('edit own tasks') && $task->user_id === auth()->id();
     }
 }

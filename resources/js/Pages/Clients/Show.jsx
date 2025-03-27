@@ -1,12 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Button } from '@/Components/ui/button';
 import { useForm } from '@inertiajs/react';
 import { CLIENT_STATUS_LABELS, CLIENT_TYPE_LABELS } from '@/constants/clientConstants';
 import { Pencil } from 'lucide-react';
 
-export default function Show({ auth, client, tags }) {
+export default function Show({ auth, client, can }) {
     const [isEditing, setIsEditing] = useState(false);
     const { data, setData, put, processing, errors } = useForm({
         name: client.name,
@@ -19,22 +19,24 @@ export default function Show({ auth, client, tags }) {
         kpp: client.kpp || '',
         address: client.address || '',
         description: client.description || '',
-        tags: client.tags?.map(tag => tag.id) || [],
     });
 
-    const handleTagToggle = (tagId) => {
-        const newTags = data.tags.includes(tagId)
-            ? data.tags.filter(id => id !== tagId)
-            : [...data.tags, tagId];
-        
-        setData('tags', newTags);
-    };
+    useEffect(() => {
+        // Проверяем наличие параметра edit в URL
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('edit') === 'true' && can.edit) {
+            setIsEditing(true);
+        }
+    }, [can.edit]);
 
     const handleSave = () => {
         put(route('clients.update', client.id), {
             onSuccess: () => {
                 setIsEditing(false);
-                router.reload();
+                router.reload({ preserveScroll: true });
+            },
+            onError: (errors) => {
+                console.error('Ошибка при обновлении:', errors);
             }
         });
     };
@@ -56,7 +58,6 @@ export default function Show({ auth, client, tags }) {
             kpp: client.kpp || '',
             address: client.address || '',
             description: client.description || '',
-            tags: client.tags?.map(tag => tag.id) || [],
         });
     };
 
@@ -96,7 +97,13 @@ export default function Show({ auth, client, tags }) {
                                             Назад к списку
                                         </Button>
                                     </Link>
-                                    {isEditing ? (
+                                    {can.edit && !isEditing && (
+                                        <Button onClick={handleEdit} className="flex items-center gap-2" data-edit-button>
+                                            <Pencil className="h-4 w-4" />
+                                            Редактировать
+                                        </Button>
+                                    )}
+                                    {isEditing && (
                                         <>
                                             <Button variant="outline" onClick={handleCancel}>
                                                 Отмена
@@ -105,11 +112,6 @@ export default function Show({ auth, client, tags }) {
                                                 Сохранить
                                             </Button>
                                         </>
-                                    ) : (
-                                        <Button onClick={handleEdit} className="flex items-center gap-2">
-                                            <Pencil className="h-4 w-4" />
-                                            Редактировать
-                                        </Button>
                                     )}
                                 </div>
                             </div>
@@ -142,6 +144,7 @@ export default function Show({ auth, client, tags }) {
                                                         >
                                                             <option value="active">Активный</option>
                                                             <option value="inactive">Неактивный</option>
+                                                            <option value="blocked">Заблокирован</option>
                                                         </select>
                                                     </div>
                                                     <div>
@@ -199,12 +202,12 @@ export default function Show({ auth, client, tags }) {
                                                 />
                                             </div>
                                         ) : (
-                                            <p className="text-gray-600">{client.address || 'Адрес не указан'}</p>
+                                            <p className="text-gray-600">{client.address || 'Не указан'}</p>
                                         )}
                                     </div>
                                 </div>
 
-                                {client.type === 'company' && (
+                                <div className="space-y-6">
                                     <div>
                                         <h4 className="text-lg font-semibold mb-4">Информация о компании</h4>
                                         <div className="space-y-4">
@@ -242,11 +245,11 @@ export default function Show({ auth, client, tags }) {
                                                 <>
                                                     <div>
                                                         <span className="block text-sm font-medium text-gray-600">Название компании</span>
-                                                        <span className="block mt-1">{client.company_name}</span>
+                                                        <span className="block mt-1">{client.company_name || 'Не указано'}</span>
                                                     </div>
                                                     <div>
                                                         <span className="block text-sm font-medium text-gray-600">ИНН</span>
-                                                        <span className="block mt-1">{client.inn}</span>
+                                                        <span className="block mt-1">{client.inn || 'Не указан'}</span>
                                                     </div>
                                                     <div>
                                                         <span className="block text-sm font-medium text-gray-600">КПП</span>
@@ -256,51 +259,45 @@ export default function Show({ auth, client, tags }) {
                                             )}
                                         </div>
                                     </div>
-                                )}
-                            </div>
 
-                            {/* Описание */}
-                            <div className="mb-8">
-                                <h4 className="text-lg font-semibold mb-4">Описание</h4>
-                                {isEditing ? (
-                                    <textarea
-                                        value={data.description}
-                                        onChange={(e) => setData('description', e.target.value)}
-                                        className="w-full border-gray-300 rounded-md shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
-                                        rows={4}
-                                        placeholder="Добавьте описание"
-                                    />
-                                ) : (
-                                    <p className="text-gray-600 whitespace-pre-wrap">{client.description || 'Описание отсутствует'}</p>
-                                )}
+                                    <div>
+                                        <h4 className="text-lg font-semibold mb-4">Описание</h4>
+                                        {isEditing ? (
+                                            <textarea
+                                                value={data.description}
+                                                onChange={(e) => setData('description', e.target.value)}
+                                                className="w-full border-gray-300 rounded-md shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+                                                rows={4}
+                                                placeholder="Введите описание"
+                                            />
+                                        ) : (
+                                            <p className="text-gray-600">{client.description || 'Описание отсутствует'}</p>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Сделки */}
-                            {client.deals && client.deals.length > 0 && (
-                                <div>
-                                    <h4 className="text-lg font-semibold mb-4">Сделки</h4>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {client.deals.map(deal => (
-                                            <div
-                                                key={deal.id}
-                                                className="p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
-                                                onClick={() => router.get(route('deals.show', deal.id))}
-                                            >
-                                                <p className="font-medium">{deal.name}</p>
-                                                <div className="mt-2 space-y-1">
-                                                    <p className="text-sm text-gray-600">
-                                                        Сумма: {new Intl.NumberFormat('ru-RU', {
-                                                            style: 'currency',
-                                                            currency: 'RUB'
-                                                        }).format(deal.value)}
-                                                    </p>
-                                                    <p className="text-sm text-gray-600">Статус: {deal.status}</p>
-                                                </div>
+                            <div>
+                                <h4 className="text-lg font-semibold mb-4">Сделки</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {client.deals?.map((deal) => (
+                                        <div
+                                            key={deal.id}
+                                            className="p-4 border rounded-lg hover:shadow-md transition-shadow"
+                                        >
+                                            <h5 className="font-medium">{deal.name}</h5>
+                                            <div className="mt-2 text-sm text-gray-600">
+                                                <p>Сумма: {deal.amount} ₽</p>
+                                                <p>Статус: {deal.status}</p>
                                             </div>
-                                        ))}
-                                    </div>
+                                        </div>
+                                    ))}
+                                    {(!client.deals || client.deals.length === 0) && (
+                                        <p className="text-gray-500">Нет активных сделок</p>
+                                    )}
                                 </div>
-                            )}
+                            </div>
                         </div>
                     </div>
                 </div>
