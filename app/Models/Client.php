@@ -22,9 +22,8 @@ class Client extends Model
         'kpp',
         'address',
         'description',
+        'user_id',
     ];
-
-    protected $with = ['tags'];
 
     public function tasks()
     {
@@ -36,26 +35,15 @@ class Client extends Model
         return $this->hasMany(Deal::class);
     }
 
-    public function tags()
+    public function user()
     {
-        return $this->belongsToMany(Tag::class)
-            ->withTimestamps();
+        return $this->belongsTo(User::class);
     }
 
     public function scopeSearch($query, $search)
     {
         if ($search) {
             return $query->whereRaw("MATCH(name, email, phone, company_name) AGAINST(? IN BOOLEAN MODE)", [$search . '*']);
-        }
-        return $query;
-    }
-
-    public function scopeWithTag($query, $tagId)
-    {
-        if ($tagId) {
-            return $query->whereHas('tags', function ($q) use ($tagId) {
-                $q->where('tags.id', $tagId);
-            });
         }
         return $query;
     }

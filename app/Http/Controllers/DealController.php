@@ -13,10 +13,23 @@ class DealController extends Controller
 {
     public function __construct(
         private readonly DealService $dealService
-    ) {}
+    ) {
+        $this->middleware('auth');
+    }
 
     public function index(Request $request)
     {
+        if (!auth()->user()->hasAnyPermission(['view deals', 'view own deals'])) {
+            abort(403);
+        }
+
+        $query = Deal::query();
+
+        if (!auth()->user()->hasPermissionTo('view deals') && 
+            auth()->user()->hasPermissionTo('view own deals')) {
+            $query->where('user_id', auth()->id());
+        }
+
         $deals = $this->dealService->getAllDeals($request->only(['search', 'status']));
         $statistics = $this->dealService->getDealStatistics();
 
@@ -24,12 +37,37 @@ class DealController extends Controller
             'deals' => $deals,
             'clients' => Client::all(),
             'statistics' => $statistics,
-            'filters' => $request->only(['search', 'status'])
+            'filters' => $request->only(['search', 'status']),
+            'can' => [
+                'create' => auth()->user()->can('create deals'),
+                'edit' => auth()->user()->can('edit deals'),
+                'delete' => auth()->user()->can('delete deals'),
+            ]
+        ]);
+    }
+
+    public function kanban()
+    {
+        if (!auth()->user()->hasAnyPermission(['view deals', 'view own deals'])) {
+            abort(403);
+        }
+
+        $deals = $this->dealService->getDealsForKanban();
+
+        return Inertia::render('Deals/Kanban', [
+            'deals' => $deals,
+            'can' => [
+                'edit' => auth()->user()->can('edit deals'),
+            ]
         ]);
     }
 
     public function create()
     {
+        if (!auth()->user()->can('create deals')) {
+            abort(403);
+        }
+
         return Inertia::render('Deals/Create', [
             'clients' => Client::all()
         ]);
@@ -37,21 +75,49 @@ class DealController extends Controller
 
     public function store(DealRequest $request)
     {
-        $this->dealService->createDeal($request->validated());
+        if (!auth()->user()->can('create deals')) {
+            abort(403);
+        }
 
-        return redirect()->route('deals.index')
-            ->with('success', 'Сделка успешно создана');
+        try {
+            $validated = $request->validated();
+            $validated['user_id'] = auth()->id();
+            
+            $deal = $this->dealService->createDeal($validated);
+
+            return redirect()->route('deals.index')
+                ->with('success', 'Сделка успешно создана');
+        } catch (\Exception $e) {
+            \Log::error('Ошибка при создании сделки', [
+                'error' => $e->getMessage(),
+                'data' => $request->all()
+            ]);
+
+            return back()->with('error', 'Произошла ошибка при создании сделки');
+        }
     }
 
     public function show(Deal $deal)
     {
+        if (!$this->canViewDeal($deal)) {
+            abort(403);
+        }
+
         return Inertia::render('Deals/Show', [
-            'deal' => $deal->load('client')
+            'deal' => $deal->load('client'),
+            'can' => [
+                'edit' => $this->canEditDeal($deal),
+                'delete' => auth()->user()->can('delete deals'),
+            ]
         ]);
     }
 
     public function edit(Deal $deal)
     {
+        if (!$this->canEditDeal($deal)) {
+            abort(403);
+        }
+
         return Inertia::render('Deals/Edit', [
             'deal' => $deal->load('client'),
             'clients' => Client::all()
@@ -60,22 +126,52 @@ class DealController extends Controller
 
     public function update(DealRequest $request, Deal $deal)
     {
-        $this->dealService->updateDeal($deal, $request->validated());
+        if (!$this->canEditDeal($deal)) {
+            abort(403);
+        }
 
-        return redirect()->route('deals.index')
-            ->with('success', 'Сделка успешно обновлена');
+        try {
+            $this->dealService->updateDeal($deal, $request->validated());
+
+            return redirect()->route('deals.index')
+                ->with('success', 'Сделка успешно обновлена');
+        } catch (\Exception $e) {
+            \Log::error('Ошибка при обновлении сделки', [
+                'error' => $e->getMessage(),
+                'data' => $request->all()
+            ]);
+
+            return back()->with('error', 'Произошла ошибка при обновлении сделки');
+        }
     }
 
     public function destroy(Deal $deal)
     {
-        $this->dealService->deleteDeal($deal);
+        if (!auth()->user()->can('delete deals')) {
+            abort(403);
+        }
 
-        return redirect()->route('deals.index')
-            ->with('success', 'Сделка успешно удалена');
+        try {
+            $this->dealService->deleteDeal($deal);
+
+            return redirect()->route('deals.index')
+                ->with('success', 'Сделка успешно удалена');
+        } catch (\Exception $e) {
+            \Log::error('Ошибка при удалении сделки', [
+                'error' => $e->getMessage(),
+                'deal_id' => $deal->id
+            ]);
+
+            return back()->with('error', 'Произошла ошибка при удалении сделки');
+        }
     }
 
     public function updateStatus(Request $request, Deal $deal)
     {
+        if (!$this->canEditDeal($deal)) {
+            abort(403);
+        }
+
         try {
             $request->validate([
                 'status' => 'required|string|in:suspended,in_progress,won,lost'
@@ -90,7 +186,7 @@ class DealController extends Controller
                 'deals' => $deals
             ]);
         } catch (\Exception $e) {
-            \Log::error('Error updating deal status', [
+            \Log::error('Ошибка при обновлении статуса сделки', [
                 'deal_id' => $deal->id,
                 'error' => $e->getMessage()
             ]);
@@ -102,10 +198,15 @@ class DealController extends Controller
         }
     }
 
-    public function kanban()
+    protected function canViewDeal(Deal $deal): bool
     {
-        return Inertia::render('Deals/Kanban', [
-            'deals' => $this->dealService->getDealsForKanban()
-        ]);
+        return auth()->user()->hasPermissionTo('view deals') ||
+            (auth()->user()->hasPermissionTo('view own deals') && $deal->user_id === auth()->id());
+    }
+
+    protected function canEditDeal(Deal $deal): bool
+    {
+        return auth()->user()->hasPermissionTo('edit deals') ||
+            (auth()->user()->hasPermissionTo('edit own deals') && $deal->user_id === auth()->id());
     }
 } 

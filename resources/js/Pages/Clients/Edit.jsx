@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 
-export default function Edit({ auth, client }) {
+export default function Edit({ auth, client, can }) {
   const [isDeleting, setIsDeleting] = useState(false);
   
   const { data, setData, put, processing, errors } = useForm({
@@ -20,6 +20,9 @@ export default function Edit({ auth, client }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!can.edit) {
+      return;
+    }
     put(route('clients.update', client.id), {
       onSuccess: () => {
         router.visit(route('clients.index'));
@@ -28,6 +31,9 @@ export default function Edit({ auth, client }) {
   };
 
   const handleDelete = () => {
+    if (!can.delete) {
+      return;
+    }
     if (window.confirm('Вы уверены, что хотите удалить этого клиента? Это действие нельзя отменить.')) {
       setIsDeleting(true);
       router.delete(route('clients.destroy', client.id), {
@@ -44,6 +50,11 @@ export default function Edit({ auth, client }) {
       });
     }
   };
+
+  if (!can.edit) {
+    router.visit(route('clients.show', client.id));
+    return null;
+  }
 
   return (
     <AuthenticatedLayout user={auth.user}>
@@ -122,15 +133,17 @@ export default function Edit({ auth, client }) {
                 </div>
 
                 <div className="flex justify-between items-center pt-4 mt-6 border-t">
-                  <Button 
-                    type="button"
-                    variant="destructive"
-                    onClick={handleDelete}
-                    disabled={isDeleting}
-                    className="bg-red-600 hover:bg-red-700 text-white"
-                  >
-                    {isDeleting ? "Удаление..." : "Удалить клиента"}
-                  </Button>
+                  {can.delete && (
+                    <Button 
+                      type="button"
+                      variant="destructive"
+                      onClick={handleDelete}
+                      disabled={isDeleting}
+                      className="bg-red-600 hover:bg-red-700 text-white"
+                    >
+                      {isDeleting ? "Удаление..." : "Удалить клиента"}
+                    </Button>
+                  )}
                   
                   <Button 
                     type="submit" 

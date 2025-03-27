@@ -6,6 +6,11 @@ use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\TinkoffController;
 use App\Http\Controllers\Api\DealController;
+use Illuminate\Http\Request;
+
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+    return $request->user();
+});
 
 Route::prefix('v1')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
