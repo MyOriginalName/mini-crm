@@ -16,6 +16,11 @@ use Illuminate\Support\Facades\Validator;
  */
 class DealController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth:sanctum');
+    }
+
     /**
      * @OA\Get(
      *     path="/api/v1/deals",
@@ -24,57 +29,46 @@ class DealController extends Controller
      *     tags={"Сделки"},
      *     security={{"bearerAuth":{}}},
      *     @OA\Parameter(
-     *         name="client_id",
+     *         name="search",
      *         in="query",
-     *         description="Фильтр по ID клиента",
+     *         description="Поиск по названию или описанию",
      *         required=false,
-     *         @OA\Schema(type="integer")
+     *         @OA\Schema(type="string")
      *     ),
      *     @OA\Parameter(
      *         name="status",
      *         in="query",
-     *         description="Фильтр по статусу сделки",
+     *         description="Фильтр по статусу",
      *         required=false,
-     *         @OA\Schema(type="string", enum={"new", "in_progress", "won", "lost"})
+     *         @OA\Schema(type="string", enum={"suspended", "in_progress", "won", "lost"})
      *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Успешный ответ",
      *         @OA\JsonContent(
-     *             type="array",
-     *             @OA\Items(
-     *                 type="object",
-     *                 @OA\Property(property="id", type="integer"),
-     *                 @OA\Property(property="title", type="string"),
-     *                 @OA\Property(property="amount", type="number", format="float"),
-     *                 @OA\Property(property="status", type="string", enum={"new", "in_progress", "won", "lost"}),
-     *                 @OA\Property(property="client_id", type="integer"),
-     *                 @OA\Property(property="created_at", type="string", format="date-time"),
-     *                 @OA\Property(property="updated_at", type="string", format="date-time"),
-     *                 @OA\Property(
-     *                     property="client",
-     *                     type="object",
-     *                     @OA\Property(property="id", type="integer"),
-     *                     @OA\Property(property="name", type="string"),
-     *                     @OA\Property(property="email", type="string"),
-     *                     @OA\Property(property="phone", type="string"),
-     *                     @OA\Property(property="company", type="string")
-     *                 )
-     *             )
+     *             type="object",
+     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Deal")),
+     *             @OA\Property(property="meta", ref="#/components/schemas/PaginationMeta")
      *         )
      *     ),
      *     @OA\Response(
-     *         response=401,
-     *         description="Неавторизован",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Unauthenticated.")
-     *         )
+     *         response=403,
+     *         description="Доступ запрещен"
      *     )
      * )
      */
     public function index(Request $request)
     {
+        if (!auth()->user()->hasAnyPermission(['view deals', 'view own deals'])) {
+            return response()->json(['message' => 'Доступ запрещен'], 403);
+        }
+
         $query = Deal::with('client');
+
+        if (!auth()->user()->hasPermissionTo('view deals') && 
+            auth()->user()->hasPermissionTo('view own deals')) {
+            $query->where('user_id', auth()->id());
+        }
 
         // Фильтрация по статусу
         if ($request->has('status')) {
@@ -102,78 +96,28 @@ class DealController extends Controller
      *     summary="Создание новой сделки",
      *     tags={"Сделки"},
      *     security={{"bearerAuth":{}}},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"title", "client_id", "amount", "status"},
-     *             @OA\Property(
-     *                 property="title",
-     *                 type="string",
-     *                 example="Новая сделка с компанией XYZ",
-     *                 description="Название сделки"
-     *             ),
-     *             @OA\Property(
-     *                 property="client_id",
-     *                 type="integer",
-     *                 example=1,
-     *                 description="ID клиента"
-     *             ),
-     *             @OA\Property(
-     *                 property="amount",
-     *                 type="number",
-     *                 format="float",
-     *                 example=1500.50,
-     *                 description="Сумма сделки"
-     *             ),
-     *             @OA\Property(
-     *                 property="status",
-     *                 type="string",
-     *                 enum={"new", "in_progress", "won", "lost"},
-     *                 example="new",
-     *                 description="Статус сделки"
-     *             )
-     *         )
-     *     ),
+     *     @OA\RequestBody(ref="#/components/requestBodies/DealStore"),
      *     @OA\Response(
      *         response=201,
-     *         description="Сделка успешно создана",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(property="id", type="integer", example=1),
-     *             @OA\Property(property="title", type="string", example="Новая сделка с компанией XYZ"),
-     *             @OA\Property(property="amount", type="number", format="float", example=1500.50),
-     *             @OA\Property(property="status", type="string", example="new"),
-     *             @OA\Property(property="client_id", type="integer", example=1),
-     *             @OA\Property(property="created_at", type="string", format="date-time"),
-     *             @OA\Property(property="updated_at", type="string", format="date-time")
-     *         )
+     *         description="Сделка создана",
+     *         @OA\JsonContent(ref="#/components/schemas/Deal")
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Доступ запрещен"
      *     ),
      *     @OA\Response(
      *         response=422,
-     *         description="Ошибка валидации",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Ошибка валидации"),
-     *             @OA\Property(
-     *                 property="errors",
-     *                 type="object",
-     *                 @OA\Property(property="title", type="array", @OA\Items(type="string", example="Поле title обязательно для заполнения")),
-     *                 @OA\Property(property="client_id", type="array", @OA\Items(type="string", example="Указанный client_id не существует")),
-     *                 @OA\Property(property="amount", type="array", @OA\Items(type="string", example="Сумма должна быть больше 0")),
-     *                 @OA\Property(property="status", type="array", @OA\Items(type="string", example="Недопустимый статус"))
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=401,
-     *         description="Неавторизован",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Unauthenticated.")
-     *         )
+     *         description="Ошибка валидации"
      *     )
      * )
      */
     public function store(Request $request)
     {
+        if (!auth()->user()->can('create deals')) {
+            return response()->json(['message' => 'Доступ запрещен'], 403);
+        }
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'client_id' => 'required|exists:clients,id',
@@ -186,7 +130,10 @@ class DealController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $deal = Deal::create($request->all());
+        $data = $request->all();
+        $data['user_id'] = auth()->id();
+
+        $deal = Deal::create($data);
         return response()->json($deal->load('client'), 201);
     }
 
@@ -197,54 +144,28 @@ class DealController extends Controller
      *     summary="Получить информацию о сделке",
      *     tags={"Сделки"},
      *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(
-     *         name="deal",
-     *         in="path",
-     *         required=true,
-     *         description="ID сделки",
-     *         @OA\Schema(type="integer", example=1)
-     *     ),
+     *     @OA\Parameter(ref="#/components/parameters/DealId"),
      *     @OA\Response(
      *         response=200,
      *         description="Успешный ответ",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(property="id", type="integer", example=1),
-     *             @OA\Property(property="title", type="string", example="Новая сделка с компанией XYZ"),
-     *             @OA\Property(property="amount", type="number", format="float", example=1500.50),
-     *             @OA\Property(property="status", type="string", example="new", enum={"new", "in_progress", "won", "lost"}),
-     *             @OA\Property(property="client_id", type="integer", example=1),
-     *             @OA\Property(property="created_at", type="string", format="date-time"),
-     *             @OA\Property(property="updated_at", type="string", format="date-time"),
-     *             @OA\Property(
-     *                 property="client",
-     *                 type="object",
-     *                 @OA\Property(property="id", type="integer", example=1),
-     *                 @OA\Property(property="name", type="string", example="Иван Иванов"),
-     *                 @OA\Property(property="email", type="string", example="ivan@example.com"),
-     *                 @OA\Property(property="phone", type="string", example="+79991234567"),
-     *                 @OA\Property(property="company", type="string", example="ООО Рога и Копыта")
-     *             )
-     *         )
+     *         @OA\JsonContent(ref="#/components/schemas/Deal")
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Доступ запрещен"
      *     ),
      *     @OA\Response(
      *         response=404,
-     *         description="Сделка не найдена",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="No query results for model [App\\Models\\Deal] 1")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=401,
-     *         description="Неавторизован",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Unauthenticated.")
-     *         )
+     *         description="Сделка не найдена"
      *     )
      * )
      */
     public function show(Deal $deal)
     {
+        if (!$this->canViewDeal($deal)) {
+            return response()->json(['message' => 'Доступ запрещен'], 403);
+        }
+
         return response()->json($deal->load('client'));
     }
 
@@ -255,92 +176,33 @@ class DealController extends Controller
      *     summary="Обновление данных сделки",
      *     tags={"Сделки"},
      *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(
-     *         name="deal",
-     *         in="path",
-     *         required=true,
-     *         description="ID сделки",
-     *         @OA\Schema(type="integer", example=1)
-     *     ),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"title", "client_id", "amount", "status"},
-     *             @OA\Property(
-     *                 property="title",
-     *                 type="string",
-     *                 example="Обновленная сделка с компанией XYZ",
-     *                 description="Название сделки"
-     *             ),
-     *             @OA\Property(
-     *                 property="client_id",
-     *                 type="integer",
-     *                 example=1,
-     *                 description="ID клиента"
-     *             ),
-     *             @OA\Property(
-     *                 property="amount",
-     *                 type="number",
-     *                 format="float",
-     *                 example=2000.75,
-     *                 description="Сумма сделки"
-     *             ),
-     *             @OA\Property(
-     *                 property="status",
-     *                 type="string",
-     *                 enum={"new", "in_progress", "won", "lost"},
-     *                 example="in_progress",
-     *                 description="Статус сделки"
-     *             )
-     *         )
-     *     ),
+     *     @OA\Parameter(ref="#/components/parameters/DealId"),
+     *     @OA\RequestBody(ref="#/components/requestBodies/DealUpdate"),
      *     @OA\Response(
      *         response=200,
-     *         description="Сделка успешно обновлена",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(property="id", type="integer", example=1),
-     *             @OA\Property(property="title", type="string", example="Обновленная сделка с компанией XYZ"),
-     *             @OA\Property(property="amount", type="number", format="float", example=2000.75),
-     *             @OA\Property(property="status", type="string", example="in_progress"),
-     *             @OA\Property(property="client_id", type="integer", example=1),
-     *             @OA\Property(property="created_at", type="string", format="date-time"),
-     *             @OA\Property(property="updated_at", type="string", format="date-time")
-     *         )
+     *         description="Сделка обновлена",
+     *         @OA\JsonContent(ref="#/components/schemas/Deal")
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Доступ запрещен"
      *     ),
      *     @OA\Response(
      *         response=404,
-     *         description="Сделка не найдена",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="No query results for model [App\\Models\\Deal] 1")
-     *         )
+     *         description="Сделка не найдена"
      *     ),
      *     @OA\Response(
      *         response=422,
-     *         description="Ошибка валидации",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Ошибка валидации"),
-     *             @OA\Property(
-     *                 property="errors",
-     *                 type="object",
-     *                 @OA\Property(property="title", type="array", @OA\Items(type="string", example="Поле title обязательно для заполнения")),
-     *                 @OA\Property(property="client_id", type="array", @OA\Items(type="string", example="Указанный client_id не существует")),
-     *                 @OA\Property(property="amount", type="array", @OA\Items(type="string", example="Сумма должна быть больше 0")),
-     *                 @OA\Property(property="status", type="array", @OA\Items(type="string", example="Недопустимый статус"))
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=401,
-     *         description="Неавторизован",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Unauthenticated.")
-     *         )
+     *         description="Ошибка валидации"
      *     )
      * )
      */
     public function update(Request $request, Deal $deal)
     {
+        if (!$this->canEditDeal($deal)) {
+            return response()->json(['message' => 'Доступ запрещен'], 403);
+        }
+
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|string|max:255',
             'client_id' => 'sometimes|exists:clients,id',
@@ -364,47 +226,75 @@ class DealController extends Controller
      *     summary="Удаление сделки",
      *     tags={"Сделки"},
      *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(
-     *         name="deal",
-     *         in="path",
-     *         required=true,
-     *         description="ID сделки",
-     *         @OA\Schema(type="integer", example=1)
+     *     @OA\Parameter(ref="#/components/parameters/DealId"),
+     *     @OA\Response(
+     *         response=204,
+     *         description="Сделка удалена"
      *     ),
      *     @OA\Response(
-     *         response=200,
-     *         description="Сделка успешно удалена",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Сделка успешно удалена")
-     *         )
+     *         response=403,
+     *         description="Доступ запрещен"
      *     ),
      *     @OA\Response(
      *         response=404,
-     *         description="Сделка не найдена",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="No query results for model [App\\Models\\Deal] 1")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=401,
-     *         description="Неавторизован",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Unauthenticated.")
-     *         )
+     *         description="Сделка не найдена"
      *     )
      * )
      */
     public function destroy(Deal $deal)
     {
+        if (!auth()->user()->can('delete deals')) {
+            return response()->json(['message' => 'Доступ запрещен'], 403);
+        }
+
         $deal->delete();
         return response()->json(null, 204);
     }
 
     /**
-     * Обновление статуса сделки
+     * @OA\Put(
+     *     path="/api/v1/deals/{deal}/status",
+     *     operationId="updateDealStatus",
+     *     summary="Обновление статуса сделки",
+     *     tags={"Сделки"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(ref="#/components/parameters/DealId"),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"status"},
+     *             @OA\Property(
+     *                 property="status",
+     *                 type="string",
+     *                 enum={"suspended", "in_progress", "won", "lost"}
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Статус обновлен",
+     *         @OA\JsonContent(ref="#/components/schemas/Deal")
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Доступ запрещен"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Сделка не найдена"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Ошибка валидации"
+     *     )
+     * )
      */
     public function updateStatus(Request $request, Deal $deal)
     {
+        if (!$this->canEditDeal($deal)) {
+            return response()->json(['message' => 'Доступ запрещен'], 403);
+        }
+
         $validator = Validator::make($request->all(), [
             'status' => 'required|in:suspended,in_progress,won,lost'
         ]);
@@ -415,5 +305,23 @@ class DealController extends Controller
 
         $deal->update(['status' => $request->status]);
         return response()->json($deal->load('client'));
+    }
+
+    protected function canViewDeal(Deal $deal): bool
+    {
+        if (auth()->user()->can('view deals')) {
+            return true;
+        }
+
+        return auth()->user()->can('view own deals') && $deal->user_id === auth()->id();
+    }
+
+    protected function canEditDeal(Deal $deal): bool
+    {
+        if (auth()->user()->can('edit deals')) {
+            return true;
+        }
+
+        return auth()->user()->can('edit own deals') && $deal->user_id === auth()->id();
     }
 } 

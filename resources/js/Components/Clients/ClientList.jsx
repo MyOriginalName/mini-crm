@@ -6,10 +6,10 @@ import { router } from '@inertiajs/react';
 import { Button } from '@/Components/ui/button';
 import { Pencil, Eye } from 'lucide-react';
 
-export default function ClientList({ clients }) {
+export default function ClientList({ clients, can }) {
   const handleEdit = (e, clientId) => {
     e.stopPropagation();
-    router.get(route('clients.edit', clientId));
+    router.get(route('clients.show', clientId), { edit: true });
   };
 
   const handleView = (e, clientId) => {
@@ -56,14 +56,16 @@ export default function ClientList({ clients }) {
                 >
                   <Eye className="h-4 w-4" />
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={(e) => handleEdit(e, client.id)}
-                  className="h-8 w-8"
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
+                {can.edit && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => handleEdit(e, client.id)}
+                    className="h-8 w-8"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             </TableCell>
           </TableRow>
@@ -84,5 +86,9 @@ ClientList.propTypes = {
       phone: PropTypes.string.isRequired,
       company_name: PropTypes.string,
     })).isRequired,
+  }).isRequired,
+  can: PropTypes.shape({
+    edit: PropTypes.bool,
+    delete: PropTypes.bool,
   }).isRequired,
 }; 
