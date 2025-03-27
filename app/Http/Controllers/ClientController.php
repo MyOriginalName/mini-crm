@@ -3,16 +3,28 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
-use App\Models\Tag;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class ClientController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     public function index(Request $request)
     {
-        $query = Client::query()
-            ->with('tags');
+        if (!auth()->user()->hasAnyPermission(['view clients', 'view own clients'])) {
+            abort(403);
+        }
+
+        $query = Client::query();
+
+        if (!auth()->user()->hasPermissionTo('view clients') && 
+            auth()->user()->hasPermissionTo('view own clients')) {
+            $query->where('user_id', auth()->id());
+        }
 
         if ($request->has('search')) {
             $search = $request->get('search');
@@ -32,30 +44,34 @@ class ClientController extends Controller
             $query->filterByStatus($request->get('status'));
         }
 
-        if ($request->has('tag')) {
-            $query->whereHas('tags', function($q) use ($request) {
-                $q->where('tags.id', $request->get('tag'));
-            });
-        }
-
         $clients = $query->latest()->paginate(10);
 
         return Inertia::render('Clients/Index', [
             'clients' => $clients,
-            'tags' => Tag::withCount('clients')->get(),
-            'filters' => $request->only(['search', 'tag', 'type', 'status'])
+            'filters' => $request->only(['search', 'type', 'status']),
+            'can' => [
+                'create' => auth()->user()->can('create clients'),
+                'edit' => auth()->user()->can('edit clients'),
+                'delete' => auth()->user()->can('delete clients'),
+            ]
         ]);
     }
 
     public function create()
     {
-        return Inertia::render('Clients/Create', [
-            'tags' => Tag::all()
-        ]);
+        if (!auth()->user()->can('create clients')) {
+            abort(403);
+        }
+
+        return Inertia::render('Clients/Create');
     }
 
     public function store(Request $request)
     {
+        if (!auth()->user()->can('create clients')) {
+            abort(403);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:clients,email',
@@ -67,18 +83,11 @@ class ClientController extends Controller
             'kpp' => 'nullable|string|max:9',
             'address' => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            'tags' => 'nullable|array',
-            'tags.*' => 'integer|min:1|exists:tags,id',
         ]);
 
-        $tags = $validated['tags'] ?? [];
-        unset($validated['tags']);
+        $validated['user_id'] = auth()->id();
 
         $client = Client::create($validated);
-        
-        if (!empty($tags)) {
-            $client->tags()->sync($tags);
-        }
 
         return redirect()->route('clients.index')
             ->with('success', 'Клиент успешно создан');
@@ -86,24 +95,38 @@ class ClientController extends Controller
 
     public function show(Client $client)
     {
-        $client->load(['tags', 'deals']);
+        if (!$this->canViewClient($client)) {
+            abort(403);
+        }
+
+        $client->load(['deals']);
         
         return Inertia::render('Clients/Show', [
             'client' => $client,
-            'tags' => Tag::all(),
+            'can' => [
+                'edit' => auth()->user()->can('edit clients'),
+                'delete' => auth()->user()->can('delete clients'),
+            ]
         ]);
     }
 
     public function edit(Client $client)
     {
+        if (!$this->canEditClient($client)) {
+            abort(403);
+        }
+
         return Inertia::render('Clients/Edit', [
-            'client' => $client->load('tags'),
-            'tags' => Tag::all()
+            'client' => $client
         ]);
     }
 
     public function update(Request $request, Client $client)
     {
+        if (!$this->canEditClient($client)) {
+            abort(403);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:clients,email,' . $client->id,
@@ -115,37 +138,44 @@ class ClientController extends Controller
             'kpp' => 'nullable|string|max:9',
             'address' => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            'tags' => 'array',
-            'tags.*' => 'exists:tags,id',
         ]);
 
         $client->update($validated);
-        
-        if (isset($validated['tags'])) {
-            $client->tags()->sync($validated['tags']);
-        }
 
-        return redirect()->route('clients.index');
+        return back()->with('success', 'Клиент успешно обновлен');
     }
 
     public function destroy(Client $client)
     {
+        if (!auth()->user()->can('delete clients')) {
+            abort(403);
+        }
+
         $client->delete();
         return redirect()->route('clients.index')
             ->with('success', 'Клиент успешно удален');
     }
 
-    public function updateTags(Request $request, Client $client)
+    protected function canViewClient(Client $client): bool
     {
-        $validated = $request->validate([
-            'tags' => 'required|array',
-            'tags.*' => 'integer|min:1|exists:tags,id',
-        ]);
+        if (auth()->user()->can('view clients')) {
+            return true;
+        }
 
-        $client->tags()->sync($validated['tags']);
+        return auth()->user()->can('view own clients') && $client->user_id === auth()->id();
+    }
 
-        return redirect()->back()
-            ->with('success', 'Теги успешно обновлены');
+    protected function canEditClient(Client $client): bool
+    {
+        if (!auth()->user()->can('edit clients')) {
+            return false;
+        }
+
+        if (auth()->user()->hasPermissionTo('edit clients')) {
+            return true;
+        }
+
+        return $client->user_id === auth()->id();
     }
 
     public function widget(Request $request)
@@ -190,25 +220,5 @@ class ClientController extends Controller
                 'message' => 'Ошибка при загрузке клиентов'
             ], 500);
         }
-    }
-
-    public function widgetStore(Request $request)
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:clients,email',
-            'phone' => 'nullable|string|max:20',
-            'type' => 'required|string|in:individual,company',
-            'status' => 'required|string|in:active,inactive,blocked',
-            'company_name' => 'nullable|required_if:type,company|string|max:255',
-            'inn' => 'nullable|required_if:type,company|string|max:12',
-            'kpp' => 'nullable|string|max:9',
-            'address' => 'nullable|string|max:255',
-            'description' => 'nullable|string',
-        ]);
-
-        $client = Client::create($validated);
-
-        return response()->json($client);
     }
 } 

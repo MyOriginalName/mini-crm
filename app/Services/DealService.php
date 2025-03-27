@@ -12,6 +12,11 @@ class DealService
     {
         $query = Deal::query()->with('client');
 
+        // Фильтрация по правам доступа
+        if (!auth()->user()->can('view deals') && auth()->user()->can('view own deals')) {
+            $query->where('user_id', auth()->id());
+        }
+
         if (!empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function($q) use ($search) {
@@ -33,17 +38,26 @@ class DealService
 
     public function getDealStatistics(): Collection
     {
-        return Deal::selectRaw('status, COUNT(*) as count, SUM(value) as total_value')
-            ->groupBy('status')
-            ->get();
+        $query = Deal::selectRaw('status, COUNT(*) as count, SUM(value) as total_value');
+
+        // Фильтрация по правам доступа
+        if (!auth()->user()->can('view deals') && auth()->user()->can('view own deals')) {
+            $query->where('user_id', auth()->id());
+        }
+
+        return $query->groupBy('status')->get();
     }
 
     public function getDealsForKanban(): Collection
     {
-        return Deal::with('client')
-            ->latest()
-            ->get()
-            ->groupBy('status');
+        $query = Deal::with('client');
+
+        // Фильтрация по правам доступа
+        if (!auth()->user()->can('view deals') && auth()->user()->can('view own deals')) {
+            $query->where('user_id', auth()->id());
+        }
+
+        return $query->latest()->get()->groupBy('status');
     }
 
     public function updateDealStatus(Deal $deal, string $status): Deal
