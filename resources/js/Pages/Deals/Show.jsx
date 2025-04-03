@@ -3,6 +3,7 @@ import { Head } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Card, CardContent } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
+import { router } from '@inertiajs/react';
 
 const statusLabels = {
   suspended: 'Приостановлена',
@@ -18,7 +19,19 @@ const statusColors = {
   lost: 'bg-red-100 text-red-800',
 };
 
-export default function Show({ auth, deal }) {
+export default function Show({ auth, deal, can }) {
+  const handleDelete = () => {
+    if (!can?.delete) return;
+    
+    if (window.confirm('Вы уверены, что хотите удалить эту сделку? Это действие нельзя отменить.')) {
+      router.delete(route('deals.destroy', deal.id), {
+        onSuccess: () => {
+          router.visit(route('deals.index'));
+        }
+      });
+    }
+  };
+
   return (
     <AuthenticatedLayout user={auth.user}>
       <Head title={`Сделка: ${deal.name}`} />
@@ -28,12 +41,22 @@ export default function Show({ auth, deal }) {
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-semibold">{deal.name}</h2>
             <div className="space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => window.location.href = route('deals.edit', deal.id)}
-              >
-                Редактировать
-              </Button>
+              {can?.edit && (
+                <Button
+                  variant="outline"
+                  onClick={() => window.location.href = route('deals.edit', deal.id)}
+                >
+                  Редактировать
+                </Button>
+              )}
+              {can?.delete && (
+                <Button
+                  variant="destructive"
+                  onClick={handleDelete}
+                >
+                  Удалить
+                </Button>
+              )}
               <Button
                 onClick={() => window.location.href = route('deals.index')}
               >

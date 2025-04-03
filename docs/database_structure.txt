@@ -1,0 +1,278 @@
+# Структура базы данных
+
+## Основные таблицы
+
+### users
+- id (bigint unsigned, auto_increment, primary key)
+- name (varchar(255))
+- email (varchar(255), unique)
+- email_verified_at (timestamp, nullable)
+- password (varchar(255))
+- remember_token (varchar(100), nullable)
+- created_at (timestamp, nullable)
+- updated_at (timestamp, nullable)
+
+### clients
+- id (bigint unsigned, auto_increment, primary key)
+- name (varchar(255))
+- email (varchar(255), unique)
+- phone (varchar(255), nullable)
+- type (varchar(255), default: 'individual')
+- status (varchar(255), default: 'active')
+- company_name (varchar(255), nullable)
+- inn (varchar(255), nullable)
+- kpp (varchar(255), nullable)
+- address (varchar(255), nullable)
+- description (text, nullable)
+- user_id (bigint unsigned, nullable, foreign key -> users.id, on delete set null)
+- created_at (timestamp, nullable)
+- updated_at (timestamp, nullable)
+- deleted_at (timestamp, nullable)
+
+Индексы:
+- clients_email_unique (email)
+- clients_user_id_foreign (user_id)
+- search_index (name, email, phone) - FULLTEXT
+
+### deals
+- id (bigint unsigned, auto_increment, primary key)
+- client_id (bigint unsigned, foreign key -> clients.id, on delete cascade)
+- user_id (bigint unsigned, foreign key -> users.id, on delete set null)
+- name (varchar(255))
+- value (decimal(10, 2))
+- status (enum: 'suspended', 'in_progress', 'won', 'lost')
+- description (text, nullable)
+- created_at (timestamp, nullable)
+- updated_at (timestamp, nullable)
+- deleted_at (timestamp, nullable)
+
+Индексы:
+- deals_client_id_foreign (client_id)
+- deals_user_id_foreign (user_id)
+
+### tasks
+- id (bigint unsigned, auto_increment, primary key)
+- title (varchar(255))
+- description (text, nullable)
+- status (varchar(255), default: 'pending')
+- priority (varchar(255), default: 'medium')
+- due_date (date, nullable)
+- user_id (bigint unsigned, foreign key -> users.id, on delete cascade)
+- client_id (bigint unsigned, foreign key -> clients.id, on delete cascade)
+- deal_id (bigint unsigned, foreign key -> deals.id, on delete cascade)
+- created_at (timestamp, nullable)
+- updated_at (timestamp, nullable)
+
+Индексы:
+- tasks_user_id_foreign (user_id)
+- tasks_client_id_foreign (client_id)
+- tasks_deal_id_foreign (deal_id)
+
+### logs
+- id (bigint unsigned, auto_increment, primary key)
+- user_id (bigint unsigned, foreign key -> users.id, on delete cascade)
+- action (varchar(255))
+- entity_type (varchar(255))
+- entity_id (bigint unsigned)
+- old_values (json, nullable)
+- new_values (json, nullable)
+- created_at (timestamp, nullable)
+- updated_at (timestamp, nullable)
+
+Индексы:
+- logs_user_id_foreign (user_id)
+
+## Таблицы для ролей и разрешений
+
+### Роли пользователей
+В системе определены три основные роли:
+
+1. **administrator**
+   - Полный доступ ко всем функциям системы
+   - Управление пользователями и их ролями
+   - Просмотр всех логов и действий
+   - Управление настройками системы
+
+2. **manager**
+   - Управление клиентами и сделками
+   - Создание и назначение задач
+   - Просмотр статистики и отчетов
+   - Ограниченный доступ к настройкам
+
+3. **user**
+   - Базовый доступ к системе
+   - Работа с назначенными задачами
+   - Просмотр собственных клиентов
+   - Ограниченный доступ к функциям
+
+### Таблицы для ролей и разрешений
+
+#### roles
+- id (bigint unsigned, auto_increment, primary key)
+- name (varchar(255), unique)
+- guard_name (varchar(255))
+- created_at (timestamp, nullable)
+- updated_at (timestamp, nullable)
+
+#### permissions
+- id (bigint unsigned, auto_increment, primary key)
+- name (varchar(255), unique)
+- guard_name (varchar(255))
+- created_at (timestamp, nullable)
+- updated_at (timestamp, nullable)
+
+#### model_has_roles
+Связывает роли с пользователями:
+- role_id (bigint unsigned, primary key)
+- model_type (varchar(255), primary key)
+- model_id (bigint unsigned, primary key)
+
+#### model_has_permissions
+Связывает разрешения с пользователями:
+- permission_id (bigint unsigned, primary key)
+- model_type (varchar(255), primary key)
+- model_id (bigint unsigned, primary key)
+
+#### role_has_permissions
+Связывает разрешения с ролями:
+- permission_id (bigint unsigned, primary key)
+- role_id (bigint unsigned, primary key)
+
+### Сидеры для ролей и разрешений
+
+#### PermissionSeeder
+Создает базовые разрешения для:
+- Управления пользователями
+- Управления клиентами
+- Управления сделками
+- Управления задачами
+
+#### RoleSeeder
+Создает роли и назначает им разрешения:
+1. administrator - все разрешения
+2. manager - ограниченный набор разрешений
+3. user - базовые разрешения
+
+#### TestUserSeeder
+Создает тестовых пользователей с разными ролями:
+1. admin@demo.com (administrator)
+2. manager@demo.com (manager)
+3. user@demo.com (user)
+
+## Служебные таблицы
+
+### cache
+- key (varchar(255), primary key)
+- value (mediumtext)
+- expiration (integer)
+
+### cache_locks
+- key (varchar(255), primary key)
+- owner (varchar(255))
+- expiration (integer)
+
+### failed_jobs
+- id (bigint unsigned, auto_increment, primary key)
+- uuid (varchar(255), unique)
+- connection (text)
+- queue (text)
+- payload (longtext)
+- exception (longtext)
+- failed_at (timestamp)
+
+### job_batches
+- id (varchar(255), primary key)
+- name (varchar(255))
+- total_jobs (integer)
+- pending_jobs (integer)
+- failed_jobs (integer)
+- failed_job_ids (text)
+- options (mediumtext, nullable)
+- cancelled_at (timestamp, nullable)
+- created_at (timestamp)
+- finished_at (timestamp, nullable)
+
+### jobs
+- id (bigint unsigned, auto_increment, primary key)
+- queue (varchar(255))
+- payload (longtext)
+- attempts (tinyint unsigned)
+- reserved_at (integer unsigned, nullable)
+- available_at (integer unsigned)
+- created_at (integer unsigned)
+
+### migrations
+- id (integer unsigned, auto_increment, primary key)
+- migration (varchar(255))
+- batch (integer)
+
+### password_reset_tokens
+- email (varchar(255), primary key)
+- token (varchar(255))
+- created_at (timestamp, nullable)
+
+### personal_access_tokens
+- id (bigint unsigned, auto_increment, primary key)
+- tokenable_type (varchar(255))
+- tokenable_id (bigint unsigned)
+- name (varchar(255))
+- token (varchar(64), unique)
+- abilities (text, nullable)
+- last_used_at (timestamp, nullable)
+- expires_at (timestamp, nullable)
+- created_at (timestamp, nullable)
+- updated_at (timestamp, nullable)
+
+### sessions
+- id (varchar(255), primary key)
+- user_id (bigint unsigned, nullable)
+- ip_address (varchar(45), nullable)
+- user_agent (text, nullable)
+- payload (longtext)
+- last_activity (integer)
+
+## Сидеры для создания тестовых данных
+
+### DatabaseSeeder
+Запускает все сидеры в следующем порядке:
+1. UserSeeder - создает администратора и менеджера
+2. ClientSeeder - создает 5 тестовых клиентов
+3. DealSeeder - создает 5 тестовых сделок
+4. TaskSeeder - создает 5 тестовых задач
+
+### UserSeeder
+Создает двух пользователей:
+1. Администратор (admin@example.com / password)
+2. Менеджер (manager@example.com / password)
+
+### ClientSeeder
+Создает 5 тестовых клиентов со следующими характеристиками:
+- Тип: individual или company
+- Статус: active или inactive
+- Для компаний заполняются поля company_name, inn, kpp
+- Все клиенты привязаны к пользователю с ID 1
+
+### DealSeeder
+Создает 5 тестовых сделок со следующими характеристиками:
+- Статус: in_progress, won или lost
+- Сумма: от 10,000 до 100,000
+- Все сделки привязаны к пользователю с ID 1
+
+### TaskSeeder
+Создает 5 тестовых задач со следующими характеристиками:
+- Статус: pending, in_progress или completed
+- Приоритет: low, medium или high
+- Срок выполнения: в течение 7 дней
+- Все задачи привязаны к пользователю с ID 1
+
+## Запуск сидеров
+
+Для создания тестовых данных выполните команду:
+```
+php artisan db:seed
+```
+
+Для запуска конкретного сидера:
+```
+php artisan db:seed --class=ClientSeeder
+``` 

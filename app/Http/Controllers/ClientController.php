@@ -99,7 +99,7 @@ class ClientController extends Controller
             abort(403);
         }
 
-        $client->load(['deals']);
+        $client->load(['deals', 'tasks']);
         
         return Inertia::render('Clients/Show', [
             'client' => $client,

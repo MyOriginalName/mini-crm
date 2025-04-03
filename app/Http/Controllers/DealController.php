@@ -58,6 +58,7 @@ class DealController extends Controller
             'deals' => $deals,
             'can' => [
                 'edit' => auth()->user()->can('edit deals'),
+                'delete' => auth()->user()->can('delete deals'),
             ]
         ]);
     }
