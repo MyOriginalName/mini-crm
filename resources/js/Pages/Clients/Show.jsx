@@ -61,6 +61,27 @@ export default function Show({ auth, client, can }) {
         });
     };
 
+    const handleDelete = () => {
+        if (!can?.delete) return;
+        
+        const dealsCount = client.deals?.length || 0;
+        const tasksCount = client.tasks?.length || 0;
+        
+        const message = `Вы уверены, что хотите удалить этого клиента? Это действие нельзя отменить.\n\n` +
+            `При удалении клиента будут также удалены:\n` +
+            `- ${dealsCount} ${dealsCount === 1 ? 'сделка' : dealsCount < 5 ? 'сделки' : 'сделок'}\n` +
+            `- ${tasksCount} ${tasksCount === 1 ? 'задача' : tasksCount < 5 ? 'задачи' : 'задач'}\n\n` +
+            `Продолжить?`;
+        
+        if (window.confirm(message)) {
+            router.delete(route('clients.destroy', client.id), {
+                onSuccess: () => {
+                    router.visit(route('clients.index'));
+                }
+            });
+        }
+    };
+
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -112,6 +133,14 @@ export default function Show({ auth, client, can }) {
                                                 Сохранить
                                             </Button>
                                         </>
+                                    )}
+                                    {can?.delete && (
+                                        <Button
+                                            variant="destructive"
+                                            onClick={handleDelete}
+                                        >
+                                            Удалить
+                                        </Button>
                                     )}
                                 </div>
                             </div>

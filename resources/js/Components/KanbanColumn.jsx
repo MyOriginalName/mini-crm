@@ -2,7 +2,7 @@ import React from 'react';
 import DealCard from './DealCard';
 import { STATUS_LABELS, STATUS_COLORS } from '@/constants/dealStatuses';
 
-export default function KanbanColumn({ status, deals, draggedDeal, onDragStart, onDragEnd, onDragOver, onDragLeave, onDrop, onDealClick }) {
+export default function KanbanColumn({ status, deals, draggedDeal, onDragStart, onDragEnd, onDragOver, onDragLeave, onDrop, onDealClick, can }) {
     return (
         <div
             className={`${STATUS_COLORS[status]} p-4 rounded-lg transition-colors duration-200`}
@@ -20,6 +20,7 @@ export default function KanbanColumn({ status, deals, draggedDeal, onDragStart, 
                         onDragStart={onDragStart}
                         onDragEnd={onDragEnd}
                         onClick={() => onDealClick(deal.id)}
+                        can={can}
                     />
                 ))}
             </div>

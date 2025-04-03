@@ -12,8 +12,8 @@ class ClientSeeder extends Seeder
     {
         $faker = Faker::create('ru_RU');
 
-        // Создаем 20 клиентов
-        for ($i = 0; $i < 20; $i++) {
+        // Создаем 5 клиентов
+        for ($i = 0; $i < 5; $i++) {
             $type = $faker->randomElement(['individual', 'company']);
             $status = $faker->randomElement(['active', 'inactive', 'blocked']);
 

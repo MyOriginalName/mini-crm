@@ -11,21 +11,19 @@ class DealSeeder extends Seeder
 {
     public function run(): void
     {
-        $users = User::all();
         $clients = Client::all();
         
-        $statuses = ['suspended', 'in_progress', 'won', 'lost'];
+        $statuses = ['in_progress', 'won', 'lost'];
         
-        // Создаем 20 тестовых сделок
-        for ($i = 1; $i <= 20; $i++) {
-            $user = $users->random();
+        // Создаем 5 тестовых сделок
+        for ($i = 1; $i <= 5; $i++) {
             $client = $clients->random();
             
             Deal::create([
                 'name' => "Сделка {$i}",
                 'client_id' => $client->id,
-                'user_id' => $user->id,
-                'value' => rand(10000, 1000000),
+                'user_id' => 1, // Привязываем к первому пользователю
+                'value' => rand(10000, 100000),
                 'status' => $statuses[array_rand($statuses)],
                 'description' => "Описание сделки {$i}",
             ]);

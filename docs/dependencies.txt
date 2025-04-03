@@ -1,0 +1,37 @@
+# Зависимости Mini-CRM
+
+## Backend (Laravel)
+### Основные пакеты
+- Laravel Framework
+- Laravel Sanctum (аутентификация)
+- Spatie/Laravel-permission (роли и права)
+- Laravel Telescope (отладка)
+
+### База данных
+- MySQL/PostgreSQL
+- Redis (кэширование)
+
+## Frontend (React)
+### Основные пакеты
+- React
+- TypeScript
+- Tailwind CSS
+- React Query
+- React Router
+- Axios
+
+### UI компоненты
+- Radix UI
+- Headless UI
+- React Icons
+
+## Инструменты разработки
+- PHPUnit (тестирование)
+- ESLint
+- Prettier
+- Vite
+- Composer
+- NPM
+
+## Дополнительные сервисы
+[Будет заполнено по мере развития проекта] 

@@ -1,0 +1,147 @@
+# Архитектура проекта Mini-CRM
+
+## Общая структура
+- Backend: Laravel (PHP)
+- Frontend: React + TypeScript
+- База данных: MySQL/PostgreSQL
+- Стилизация: Tailwind CSS
+
+## Структура папок
+```
+mini-crm/
+├── app/                    # Основной код приложения
+│   ├── Http/              # Контроллеры, Middleware, Requests
+│   │   ├── controllers/   # Контроллеры
+│   │   ├── middleware/    # Middleware
+│   │   ├── requests/      # Запросы
+│   │   └── providers/     # Сервис-провайдеры
+│   ├── models/            # Eloquent модели
+│   ├── services/          # Бизнес-логика
+│   ├── repositories/      # Работа с данными
+│   └── providers/         # Сервис-провайдеры
+├── config/                # Конфигурационные файлы
+├── database/              # Миграции, сиды, фабрики
+├── resources/             # Frontend ресурсы
+│   ├── js/               # React компоненты
+│   │   ├── components/   # Переиспользуемые компоненты
+│   │   ├── pages/        # Страницы приложения
+│   │   ├── hooks/        # React хуки
+│   │   └── services/     # API сервисы
+│   └── css/              # Стили
+├── routes/                # Маршруты API и веб
+├── storage/               # Файлы приложения
+└── tests/                 # Тесты
+```
+
+## Основные модули и их расположение
+
+### 1. Аутентификация и авторизация
+- Backend:
+  - `app/Http/Controllers/Auth/` - контроллеры аутентификации
+  - `app/Http/Middleware/Authenticate.php` - middleware аутентификации
+  - `config/auth.php` - конфигурация аутентификации
+  - `routes/auth.php` - маршруты аутентификации
+- Frontend:
+  - `resources/js/pages/Auth/` - страницы входа/регистрации
+  - `resources/js/services/auth.service.ts` - сервис аутентификации
+  - `resources/js/hooks/useAuth.ts` - хук для работы с аутентификацией
+
+### 2. Управление пользователями
+- Backend:
+  - `app/Http/Controllers/UserController.php` - CRUD операции
+  - `app/models/User.php` - модель пользователя
+  - `app/services/UserService.php` - бизнес-логика
+  - `database/migrations/` - миграции таблицы пользователей
+- Frontend:
+  - `resources/js/pages/Users/` - страницы управления пользователями
+  - `resources/js/components/Users/` - компоненты для работы с пользователями
+  - `resources/js/services/user.service.ts` - API сервис
+
+### 3. Управление клиентами
+- Backend:
+  - `app/Http/Controllers/ClientController.php`
+  - `app/models/Client.php`
+  - `app/services/ClientService.php`
+  - `database/migrations/` - миграции таблицы клиентов
+- Frontend:
+  - `resources/js/pages/Clients/`
+  - `resources/js/components/Clients/`
+  - `resources/js/services/client.service.ts`
+
+### 4. Управление задачами
+- Backend:
+  - `app/Http/Controllers/TaskController.php`
+  - `app/models/Task.php`
+  - `app/services/TaskService.php`
+  - `database/migrations/` - миграции таблицы задач
+- Frontend:
+  - `resources/js/pages/Tasks/`
+  - `resources/js/components/Tasks/`
+  - `resources/js/services/task.service.ts`
+
+### 5. Управление проектами
+- Backend:
+  - `app/Http/Controllers/ProjectController.php`
+  - `app/models/Project.php`
+  - `app/services/ProjectService.php`
+  - `database/migrations/` - миграции таблицы проектов
+- Frontend:
+  - `resources/js/pages/Projects/`
+  - `resources/js/components/Projects/`
+  - `resources/js/services/project.service.ts`
+
+### 6. Отчеты и аналитика
+- Backend:
+  - `app/Http/Controllers/ReportController.php`
+  - `app/services/ReportService.php`
+  - `app/exports/` - экспорт данных
+- Frontend:
+  - `resources/js/pages/Reports/`
+  - `resources/js/components/Reports/`
+  - `resources/js/services/report.service.ts`
+
+## Ключевые компоненты
+- Сервисный слой для бизнес-логики
+- Репозиторный слой для работы с данными
+- API ресурсы для форматирования ответов
+- Хуки для управления состоянием
+- Сервисы для API взаимодействия
+
+## Зависимости между модулями
+- Пользователи -> Аутентификация (зависит от)
+- Задачи -> Пользователи (назначаются)
+- Задачи -> Проекты (принадлежат)
+- Проекты -> Клиенты (принадлежат)
+- Отчеты -> Все модули (анализируют)
+
+## Паттерны проектирования
+- Repository Pattern - для работы с данными
+- Service Layer - для бизнес-логики
+- Factory Pattern - для создания объектов
+- Observer Pattern - для событий
+- Strategy Pattern - для различных алгоритмов
+- Component Pattern - для React компонентов 
+
+## Типы пользователей и роли
+
+В системе существует три типа пользователей:
+
+1. **Администратор (Administrator)**
+   - Полный доступ ко всем функциям системы
+   - Управление пользователями и их ролями
+   - Просмотр всех логов и действий
+   - Управление настройками системы
+
+2. **Менеджер (Manager)**
+   - Управление клиентами и сделками
+   - Создание и назначение задач
+   - Просмотр статистики и отчетов
+   - Ограниченный доступ к настройкам
+
+3. **Пользователь (User)**
+   - Базовый доступ к системе
+   - Работа с назначенными задачами
+   - Просмотр собственных клиентов
+   - Ограниченный доступ к функциям
+
+Роли пользователей отображаются в профиле пользователя и используются для контроля доступа к различным функциям системы через систему разрешений Laravel. 
