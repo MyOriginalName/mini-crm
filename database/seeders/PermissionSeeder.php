@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class PermissionSeeder extends Seeder
 {
@@ -38,5 +39,37 @@ class PermissionSeeder extends Seeder
         Permission::create(['name' => 'view tasks']);
         Permission::create(['name' => 'edit own tasks']);
         Permission::create(['name' => 'view own tasks']);
+
+        // Создаем роли
+        $adminRole = Role::create(['name' => 'admin']);
+        $managerRole = Role::create(['name' => 'manager']);
+        $userRole = Role::create(['name' => 'user']);
+
+        // Назначаем все разрешения роли admin
+        $adminRole->givePermissionTo(Permission::all());
+
+        // Назначаем разрешения роли manager
+        $managerRole->givePermissionTo([
+            'view clients',
+            'create clients',
+            'edit clients',
+            'view deals',
+            'create deals',
+            'edit deals',
+            'view tasks',
+            'create tasks',
+            'edit tasks',
+            'edit own tasks',
+            'view own tasks',
+        ]);
+
+        // Назначаем базовые разрешения роли user
+        $userRole->givePermissionTo([
+            'view clients',
+            'view deals',
+            'view tasks',
+            'edit own tasks',
+            'view own tasks',
+        ]);
     }
 } 

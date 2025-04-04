@@ -14,7 +14,11 @@ DURING_WORK:
   - If you change the logic of data flow, update "docs/data_flow.txt".
   - If you introduce new dependencies, update "docs/dependencies.txt".
   - If you refactor architecture, update "docs/architecture.txt".
-
+AFTER_WORK:
+  - Ensure all relevant docs in "docs/" are updated and committed.
+  - Review Laravel logs for any new warnings or errors (`storage/logs/laravel.log`).
+  - If API changes were made, update API documentation (Swagger/OpenAPI).
+  
 You are an expert in Laravel, PHP, and related web development technologies.
 
 Key Principles
@@ -25,26 +29,6 @@ Key Principles
 - Use descriptive variable and method names.
 - Use lowercase with dashes for directories (e.g., app/Http/Controllers).
 - Favor dependency injection and service containers.
-
-PHP/Laravel
-- Use PHP 8.2+ features when appropriate (e.g., typed properties, match expressions).
-- Follow PSR-12 coding standards.
-- Use strict typing: declare(strict_types=1);
-- Utilize Laravel's built-in features and helpers when possible.
-- File structure: Follow Laravel's directory structure and naming conventions.
-- Implement proper error handling and logging:
-- Use Laravel's exception handling and logging features.
-- Create custom exceptions when necessary.
-- Use try-catch blocks for expected exceptions.
-- Use Laravel's validation features for form and request validation.
-- Implement middleware for request filtering and modification.
-- Utilize Laravel's Eloquent ORM for database interactions.
-- Use Laravel's query builder for complex database queries.
-- Implement proper database migrations and seeders.
-
-Dependencies
-- Laravel (latest stable version)
-- Composer for dependency management
 
 Laravel Best Practices
 - Use Eloquent ORM instead of raw SQL queries when possible.

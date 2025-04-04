@@ -41,9 +41,9 @@ export default function Dashboard({ auth }) {
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Панель управления</h2>}
+            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Дашборд</h2>}
         >
-            <Head title="Панель управления" />
+            <Head title="Дашборд" />
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">

@@ -145,3 +145,112 @@ mini-crm/
    - Ограниченный доступ к функциям
 
 Роли пользователей отображаются в профиле пользователя и используются для контроля доступа к различным функциям системы через систему разрешений Laravel. 
+
+Структура контроллеров:
+----------------------
+app/Http/Controllers/
+├── Auth/ - Контроллеры аутентификации и авторизации
+│   ├── AuthenticatedSessionController.php - Управление сессиями
+│   ├── ConfirmablePasswordController.php - Подтверждение пароля
+│   ├── EmailVerificationNotificationController.php - Уведомления о верификации email
+│   ├── EmailVerificationPromptController.php - Запрос верификации email
+│   ├── NewPasswordController.php - Сброс пароля
+│   ├── PasswordController.php - Управление паролем
+│   ├── PasswordResetLinkController.php - Ссылки для сброса пароля
+│   └── RegisteredUserController.php - Регистрация пользователей
+├── Api/ - API контроллеры
+├── CRM/ - Бизнес-логика CRM
+│   ├── DealController.php - Управление сделками
+│   ├── ClientController.php - Управление клиентами
+│   └── TaskController.php - Управление задачами
+└── User/ - Управление пользователями
+    ├── ProfileController.php - Профиль пользователя
+    └── UserController.php - Администрирование пользователей
+
+Принципы организации:
+1. Каждый контроллер отвечает за одну конкретную функциональность
+2. Группировка по бизнес-доменам
+3. Четкое разделение ответственности
+4. Легкость навигации и поддержки
+5. Масштабируемость 
+
+Административная панель:
+- Контроллеры: app/Http/Controllers/Admin/
+  - AdminController.php - основной контроллер админ-панели
+  - UserController.php - управление пользователями
+  - LogController.php - просмотр логов
+  - SystemSettingsController.php - настройки системы
+  - ProfileController.php - профиль пользователя в админ-панели
+- Представления: resources/js/Pages/Admin/
+  - Users/Index.jsx - страница управления пользователями
+  - Logs/Index.jsx - страница просмотра логов
+  - Settings/Index.jsx - страница настроек системы
+  - Profile/Edit.jsx - страница профиля в админ-панели
+- Макеты:
+  - resources/js/Layouts/AdminLayout.jsx - макет админ-панели
+  - resources/js/Layouts/AuthenticatedLayout.jsx - макет пользовательской панели
+- Middleware: app/Http/Middleware/AdminMiddleware.php
+
+Особенности административной панели:
+1. Отдельный профиль пользователя в админ-панели с сохранением контекста
+2. Унифицированный дизайн выпадающих меню и навигации
+3. Цветовая индикация действий в логах:
+   - created (зеленый) - создание
+   - updated (синий) - обновление
+   - deleted (красный) - удаление
+4. Пагинация с использованием компонентов UI
+5. Переключение между админ и пользовательской панелями
+
+## Система ролей и разрешений
+
+В приложении реализована система ролей и разрешений с использованием пакета spatie/laravel-permission.
+
+### Роли
+
+1. Администратор (admin)
+   - Полный доступ ко всем функциям системы
+   - Доступ к админ-панели
+   - Может создавать, просматривать, редактировать и удалять все ресурсы
+
+2. Менеджер (manager)
+   - Доступ к клиентам (просмотр, создание, редактирование)
+   - Доступ к сделкам (просмотр, создание, редактирование)
+   - Доступ к задачам (просмотр, создание, редактирование)
+   - Нет доступа к удалению ресурсов
+   - Нет доступа к админ-панели
+
+3. Пользователь (user)
+   - Базовый доступ только для просмотра клиентов и сделок
+   - Может просматривать и редактировать только свои задачи
+
+### Разрешения
+
+1. Управление пользователями:
+   - manage users
+   - create users
+   - edit users
+   - delete users
+   - view users
+
+2. Управление клиентами:
+   - manage clients
+   - create clients
+   - edit clients
+   - delete clients
+   - view clients
+
+3. Управление сделками:
+   - manage deals
+   - create deals
+   - edit deals
+   - delete deals
+   - view deals
+
+4. Управление задачами:
+   - manage tasks
+   - create tasks
+   - edit tasks
+   - delete tasks
+   - view tasks
+   - edit own tasks
+   - view own tasks 

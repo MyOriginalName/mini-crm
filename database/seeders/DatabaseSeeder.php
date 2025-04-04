@@ -16,11 +16,6 @@ class DatabaseSeeder extends Seeder
             PermissionSeeder::class,
         ]);
 
-        // Затем создаем роли
-        $this->call([
-            RoleSeeder::class,
-        ]);
-
         // Затем создаем тестовых пользователей
         $this->call([
             TestUserSeeder::class,

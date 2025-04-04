@@ -8,12 +8,13 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use App\Traits\Loggable;
 
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable, HasRoles; 
+    use HasApiTokens, HasFactory, Notifiable, HasRoles, Loggable; 
 
     /**
      * The attributes that are mass assignable.
@@ -57,5 +58,25 @@ class User extends Authenticatable
     public function tasks()
     {
         return $this->hasMany(Task::class);
+    }
+
+    /**
+     * Get the deals associated with the user.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function deals()
+    {
+        return $this->hasMany(Deal::class);
+    }
+
+    /**
+     * Get the clients associated with the user.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function clients()
+    {
+        return $this->hasMany(Client::class);
     }
 }

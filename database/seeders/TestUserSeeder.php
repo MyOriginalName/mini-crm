@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class TestUserSeeder extends Seeder
 {
@@ -15,6 +16,7 @@ class TestUserSeeder extends Seeder
             'name' => 'Администратор',
             'email' => 'admin@demo.com',
             'password' => Hash::make('admin123'),
+            'email_verified_at' => now(),
         ]);
         $admin->assignRole('admin');
 
@@ -23,14 +25,16 @@ class TestUserSeeder extends Seeder
             'name' => 'Менеджер',
             'email' => 'manager@demo.com',
             'password' => Hash::make('manager123'),
+            'email_verified_at' => now(),
         ]);
         $manager->assignRole('manager');
 
-        // Создаем пользователя
+        // Создаем обычного пользователя
         $user = User::create([
             'name' => 'Пользователь',
             'email' => 'user@demo.com',
             'password' => Hash::make('user123'),
+            'email_verified_at' => now(),
         ]);
         $user->assignRole('user');
     }

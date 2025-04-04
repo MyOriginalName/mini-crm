@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\Loggable;
 
 class Task extends Model
 {
-    use HasFactory;
+    use HasFactory, Loggable;
 
     protected $fillable = [
         'title',
