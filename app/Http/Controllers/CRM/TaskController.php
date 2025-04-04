@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\CRM;
 
+use App\Http\Controllers\Controller;
 use App\Models\Task;
 use App\Models\Client;
 use App\Models\Deal;

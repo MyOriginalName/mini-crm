@@ -9,10 +9,24 @@ class Log extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'action', 'entity_type', 'entity_id', 'data'];
+    protected $fillable = [
+        'user_id',
+        'action',
+        'entity_type',
+        'entity_id',
+        'old_values',
+        'new_values',
+        'description'
+    ];
 
     protected $casts = [
-        'data' => 'array',
+        'old_values' => 'array',
+        'new_values' => 'array',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }
 
