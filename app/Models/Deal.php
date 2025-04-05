@@ -11,12 +11,12 @@ class Deal extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'title',
+        'description',
+        'status',
+        'amount',
         'client_id',
         'user_id',
-        'name',
-        'value',
-        'status',
-        'description',
     ];
 
     public function client()
