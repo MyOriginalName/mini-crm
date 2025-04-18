@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('deals', function (Blueprint $table) {
             $table->id();
-            $table->string('title');
+            $table->string('name'); // Было 'title'
             $table->text('description');
-            $table->enum('status', ['active', 'pending', 'completed', 'cancelled']);
-            $table->decimal('amount', 10, 2);
+            $table->enum('status', ['in_progress', 'won', 'lost', 'suspended']); // Обновляем статусы под сидер
+            $table->decimal('value', 10, 2); // Было 'amount'
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('client_id')->constrained()->onDelete('cascade');
             $table->timestamps();

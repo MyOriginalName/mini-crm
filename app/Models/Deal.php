@@ -11,10 +11,10 @@ class Deal extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'title',
+        'name',
         'description',
         'status',
-        'amount',
+        'value',
         'client_id',
         'user_id',
     ];
@@ -33,4 +33,4 @@ class Deal extends Model
     {
         return $this->hasMany(Task::class);
     }
-} 
+}

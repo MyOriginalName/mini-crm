@@ -13,7 +13,22 @@ return new class extends Migration
     {
         Schema::create('clients', function (Blueprint $table) {
             $table->id();
+            $table->string('name');
+            $table->string('email')->unique();
+            $table->string('phone');
+            $table->enum('type', ['individual', 'company']);
+            $table->enum('status', ['active', 'inactive', 'blocked']);
+            $table->string('company_name')->nullable();
+            $table->string('inn', 10)->nullable();
+            $table->string('kpp', 9)->nullable();
+            $table->text('address');
+            $table->text('description')->nullable();
+            $table->unsignedBigInteger('user_id');
             $table->timestamps();
+            $table->softDeletes(); // Добавляем столбец для мягкого удаления
+            
+            // Добавляем внешний ключ
+            $table->foreign('user_id')->references('id')->on('users');
         });
     }
 
