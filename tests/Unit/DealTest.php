@@ -19,10 +19,10 @@ class DealTest extends TestCase
         $client = Client::factory()->create();
         
         $dealData = [
-            'title' => $this->faker->sentence,
+            'name' => $this->faker->sentence,
             'description' => $this->faker->paragraph,
-            'status' => 'active',
-            'amount' => $this->faker->randomFloat(2, 1000, 10000),
+            'status' => 'in_progress',
+            'value' => $this->faker->randomFloat(2, 1000, 10000),
             'user_id' => $user->id,
             'client_id' => $client->id,
         ];
@@ -30,11 +30,11 @@ class DealTest extends TestCase
         $deal = Deal::create($dealData);
 
         $this->assertInstanceOf(Deal::class, $deal);
-        $this->assertEquals($dealData['title'], $deal->title);
+        $this->assertEquals($dealData['name'], $deal->name);
         $this->assertEquals($dealData['status'], $deal->status);
-        $this->assertEquals($dealData['amount'], $deal->amount);
+        $this->assertEquals($dealData['value'], $deal->value);
         $this->assertDatabaseHas('deals', [
-            'title' => $dealData['title'],
+            'name' => $dealData['name'],
             'user_id' => $dealData['user_id'],
         ]);
     }
@@ -62,14 +62,14 @@ class DealTest extends TestCase
     /** @test */
     public function it_can_update_deal_status()
     {
-        $deal = Deal::factory()->create(['status' => 'active']);
+        $deal = Deal::factory()->create(['status' => 'in_progress']);
         
-        $deal->update(['status' => 'completed']);
+        $deal->update(['status' => 'won']);
 
-        $this->assertEquals('completed', $deal->fresh()->status);
+        $this->assertEquals('won', $deal->fresh()->status);
         $this->assertDatabaseHas('deals', [
             'id' => $deal->id,
-            'status' => 'completed',
+            'status' => 'won',
         ]);
     }
 

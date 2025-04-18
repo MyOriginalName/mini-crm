@@ -197,6 +197,8 @@ class ClientController extends Controller
             $tags = $validated['tags'] ?? [];
             unset($validated['tags']);
 
+            $validated['user_id'] = auth()->id();
+
             $client = Client::create($validated);
             
             if (!empty($tags)) {

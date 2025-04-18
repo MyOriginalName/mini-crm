@@ -17,6 +17,7 @@ class Task extends Model
         'status',
         'priority',
         'due_date',
+        'deadline',
         'user_id',
         'client_id',
         'deal_id',
@@ -25,6 +26,18 @@ class Task extends Model
     protected $casts = [
         'due_date' => 'date',
     ];
+
+    // Accessor for deadline attribute to map to due_date
+    public function getDeadlineAttribute()
+    {
+        return $this->due_date ? $this->due_date->format('Y-m-d') : null;
+    }
+
+    // Mutator for deadline attribute to set due_date
+    public function setDeadlineAttribute($value)
+    {
+        $this->attributes['due_date'] = $value;
+    }
 
     /**
      * Get the client that owns the task.

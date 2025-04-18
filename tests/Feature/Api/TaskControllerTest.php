@@ -21,6 +21,9 @@ class TaskControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Seed permissions before tests
+        $this->seed(\Database\Seeders\PermissionSeeder::class);
         
         $this->user = User::factory()->create();
         $this->token = $this->user->createToken('api-token')->plainTextToken;
@@ -28,6 +31,16 @@ class TaskControllerTest extends TestCase
         $this->deal = Deal::factory()->create([
             'client_id' => $this->client->id,
             'user_id' => $this->user->id,
+        ]);
+
+        // Assign necessary permissions to the user for task operations
+        $this->user->givePermissionTo([
+            'view tasks',
+            'view own tasks',
+            'create tasks',
+            'edit tasks',
+            'edit own tasks',
+            'delete tasks',
         ]);
     }
 
@@ -80,22 +93,28 @@ class TaskControllerTest extends TestCase
             'user_id' => $this->user->id,
             'client_id' => $this->client->id,
             'deal_id' => $this->deal->id,
-            'status' => 'todo',
+            'status' => 'pending',
         ]);
         Task::factory()->create([
             'user_id' => $this->user->id,
             'client_id' => $this->client->id,
             'deal_id' => $this->deal->id,
-            'status' => 'done',
+            'status' => 'in_progress',
+        ]);
+        Task::factory()->create([
+            'user_id' => $this->user->id,
+            'client_id' => $this->client->id,
+            'deal_id' => $this->deal->id,
+            'status' => 'completed',
         ]);
 
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token,
-        ])->getJson('/api/v1/tasks?status=todo');
+        ])->getJson('/api/v1/tasks?status=pending');
 
         $response->assertStatus(200)
             ->assertJsonCount(1, 'data')
-            ->assertJsonPath('data.0.status', 'todo');
+            ->assertJsonPath('data.0.status', 'pending');
     }
 
     public function test_can_filter_tasks_by_priority()
@@ -129,7 +148,7 @@ class TaskControllerTest extends TestCase
         ])->postJson('/api/v1/tasks', [
             'title' => 'Test Task',
             'description' => 'Test Description',
-            'status' => 'todo',
+            'status' => 'pending',
             'priority' => 'high',
             'deadline' => now()->addDays(7)->format('Y-m-d'),
             'client_id' => $this->client->id,
@@ -139,7 +158,7 @@ class TaskControllerTest extends TestCase
         $response->assertStatus(201)
             ->assertJson([
                 'title' => 'Test Task',
-                'status' => 'todo',
+                'status' => 'pending',
                 'priority' => 'high',
             ]);
 
@@ -210,21 +229,21 @@ class TaskControllerTest extends TestCase
             'Authorization' => 'Bearer ' . $this->token,
         ])->putJson("/api/v1/tasks/{$task->id}", [
             'title' => 'Updated Task',
-            'status' => 'done',
+            'status' => 'completed',
             'priority' => 'low',
         ]);
 
         $response->assertStatus(200)
             ->assertJson([
                 'title' => 'Updated Task',
-                'status' => 'done',
+                'status' => 'completed',
                 'priority' => 'low',
             ]);
 
         $this->assertDatabaseHas('tasks', [
             'id' => $task->id,
             'title' => 'Updated Task',
-            'status' => 'done',
+            'status' => 'completed',
             'priority' => 'low',
         ]);
     }

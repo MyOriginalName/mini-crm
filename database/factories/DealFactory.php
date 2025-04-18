@@ -14,10 +14,10 @@ class DealFactory extends Factory
     public function definition()
     {
         return [
-            'title' => $this->faker->sentence,
+            'name' => $this->faker->sentence,
             'description' => $this->faker->paragraph,
-            'status' => $this->faker->randomElement(['active', 'pending', 'completed', 'cancelled']),
-            'amount' => $this->faker->randomFloat(2, 1000, 10000),
+            'status' => $this->faker->randomElement(['in_progress', 'won', 'lost', 'suspended']),
+            'value' => $this->faker->randomFloat(2, 1000, 10000),
             'user_id' => User::factory(),
             'client_id' => Client::factory(),
         ];
