@@ -18,6 +18,7 @@ return new class extends Migration
             $table->enum('status', ['pending', 'in_progress', 'completed']);
             $table->enum('priority', ['low', 'medium', 'high']);
             $table->timestamp('due_date');
+            $table->foreignId('deal_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('client_id')->constrained()->onDelete('cascade');
             $table->timestamps();

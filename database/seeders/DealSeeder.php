@@ -13,7 +13,7 @@ class DealSeeder extends Seeder
     {
         $clients = Client::all();
         
-        $statuses = ['in_progress', 'won', 'lost'];
+        $statuses = ['in_progress', 'won', 'lost', 'suspended'];
         
         // Создаем 5 тестовых сделок
         for ($i = 1; $i <= 5; $i++) {
