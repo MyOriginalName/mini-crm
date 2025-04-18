@@ -24,6 +24,7 @@ class ActionLogger
                     'action' => strtoupper($request->method()),
                     'entity_type' => $request->segment(3), // Например, "clients"
                     'entity_id' => $entityId,
+                    'description' => 'User ' . auth()->id() . ' performed ' . strtoupper($request->method()) . ' on ' . $request->segment(3) . ' ' . $entityId,
                     'data' => json_encode($request->all()), // Данные нужно сохранять как JSON
                 ]);
             }

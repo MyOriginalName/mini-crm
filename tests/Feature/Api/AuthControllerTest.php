@@ -12,7 +12,7 @@ class AuthControllerTest extends TestCase
 
     public function test_user_can_register()
     {
-        $response = $this->postJson('/api/register', [
+        $response = $this->postJson('/api/v1/register', [
             'name' => 'Test User',
             'email' => 'test@example.com',
             'password' => 'password123',
@@ -37,7 +37,7 @@ class AuthControllerTest extends TestCase
 
     public function test_user_cannot_register_with_invalid_data()
     {
-        $response = $this->postJson('/api/register', [
+        $response = $this->postJson('/api/v1/register', [
             'name' => '',
             'email' => 'invalid-email',
             'password' => '123',
@@ -55,7 +55,7 @@ class AuthControllerTest extends TestCase
             'password' => bcrypt('password123'),
         ]);
 
-        $response = $this->postJson('/api/login', [
+        $response = $this->postJson('/api/v1/login', [
             'email' => 'test@example.com',
             'password' => 'password123',
         ]);
@@ -73,7 +73,7 @@ class AuthControllerTest extends TestCase
 
     public function test_user_cannot_login_with_invalid_credentials()
     {
-        $response = $this->postJson('/api/login', [
+        $response = $this->postJson('/api/v1/login', [
             'email' => 'test@example.com',
             'password' => 'wrongpassword',
         ]);
@@ -89,7 +89,7 @@ class AuthControllerTest extends TestCase
 
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $token,
-        ])->postJson('/api/logout');
+        ])->postJson('/api/v1/logout');
 
         $response->assertStatus(200)
             ->assertJson(['message' => 'Logged out successfully']);
@@ -106,7 +106,7 @@ class AuthControllerTest extends TestCase
 
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $token,
-        ])->getJson('/api/user');
+        ])->getJson('/api/v1/user');
 
         $response->assertStatus(200)
             ->assertJsonStructure([
@@ -118,9 +118,9 @@ class AuthControllerTest extends TestCase
 
     public function test_unauthenticated_user_cannot_get_profile()
     {
-        $response = $this->getJson('/api/user');
+        $response = $this->getJson('/api/v1/user');
 
         $response->assertStatus(401)
-            ->assertJson(['message' => 'Unauthorized']);
+            ->assertJson(['message' => 'Unauthenticated.']);
     }
 } 

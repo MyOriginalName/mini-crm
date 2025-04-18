@@ -40,7 +40,7 @@ class TaskController extends Controller
      *         in="query",
      *         description="Фильтр по статусу",
      *         required=false,
-     *         @OA\Schema(type="string", enum={"todo", "in_progress", "done", "cancelled"})
+     *         @OA\Schema(type="string", enum={"pending", "in_progress", "completed"})
      *     ),
      *     @OA\Parameter(
      *         name="priority",
@@ -159,7 +159,19 @@ class TaskController extends Controller
             $query->where('user_id', $request->user_id);
         }
 
-        return response()->json($query->paginate(10));
+        $tasks = $query->paginate(10);
+        $tasks->getCollection()->transform(function ($task) {
+            $task->append('deadline');
+            return $task;
+        });
+        return response()->json([
+            'data' => $tasks->items(),
+            'meta' => [
+                'current_page' => $tasks->currentPage(),
+                'per_page' => $tasks->perPage(),
+                'total' => $tasks->total(),
+            ],
+        ]);
     }
 
     /**
@@ -220,16 +232,15 @@ class TaskController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'status' => 'required|in:pending,in_progress,completed',
-            'priority' => 'required|in:low,medium,high',
-            'due_date' => 'nullable|date',
-            'client_id' => 'required|exists:clients,id',
+            'priority' => 'required|in:high,medium,low',
+            'deadline' => 'required|date',
+            'client_id' => 'nullable|exists:clients,id',
             'deal_id' => 'nullable|exists:deals,id',
         ]);
 
-        $data = $request->all();
-        $data['user_id'] = auth()->id();
+        $validated['user_id'] = auth()->id();
 
-        $task = Task::create($data);
+        $task = Task::create($validated);
         return response()->json($task->load('user', 'client', 'deal'), 201);
     }
 
@@ -364,7 +375,7 @@ class TaskController extends Controller
         $validator = Validator::make($request->all(), [
             'title' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
-            'status' => 'sometimes|required|in:todo,in_progress,done,cancelled',
+            'status' => 'sometimes|required|in:pending,in_progress,completed',
             'priority' => 'sometimes|required|in:high,medium,low',
             'deadline' => 'sometimes|required|date',
             'user_id' => 'sometimes|required|exists:users,id',

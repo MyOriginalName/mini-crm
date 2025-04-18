@@ -18,6 +18,8 @@ class ClientFactory extends Factory
             'phone' => $this->faker->phoneNumber,
             'address' => $this->faker->address,
             'user_id' => User::factory(),
+            'type' => $this->faker->randomElement(['individual', 'company']),
+            'status' => $this->faker->randomElement(['active', 'inactive', 'blocked']),
         ];
     }
-} 
+}

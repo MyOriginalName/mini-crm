@@ -127,14 +127,21 @@ class ClientControllerTest extends TestCase
     {
         $client = Client::factory()->create();
 
-        $response = $this->withHeaders([
-            'Authorization' => 'Bearer ' . $this->token,
-        ])->putJson("/api/v1/clients/{$client->id}", [
+        $updateData = [
             'name' => 'Updated Name',
             'email' => $client->email,
             'type' => $client->type,
             'status' => $client->status,
-        ]);
+        ];
+
+        if ($client->type === 'company') {
+            $updateData['company_name'] = $client->company_name ?? 'Updated Company';
+            $updateData['inn'] = $client->inn ?? '123456789012';
+        }
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $this->token,
+        ])->putJson("/api/v1/clients/{$client->id}", $updateData);
 
         $response->assertStatus(200)
             ->assertJson([
@@ -169,7 +176,7 @@ class ClientControllerTest extends TestCase
 
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token,
-        ])->postJson("/api/v1/clients/{$client->id}/tags", [
+        ])->putJson("/api/v1/clients/{$client->id}/tags", [
             'tags' => $tags->pluck('id')->toArray(),
         ]);
 

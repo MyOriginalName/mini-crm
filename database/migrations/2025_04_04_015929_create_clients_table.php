@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('company_name')->nullable();
             $table->string('inn', 10)->nullable();
             $table->string('kpp', 9)->nullable();
-            $table->text('address');
+            $table->text('address')->nullable();
             $table->text('description')->nullable();
             $table->unsignedBigInteger('user_id');
             $table->timestamps();

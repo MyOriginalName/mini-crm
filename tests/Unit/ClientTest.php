@@ -22,6 +22,8 @@ class ClientTest extends TestCase
             'phone' => $this->faker->phoneNumber,
             'address' => $this->faker->address,
             'user_id' => $user->id,
+            'type' => 'individual',
+            'status' => 'active',
         ];
 
         $client = Client::create($clientData);

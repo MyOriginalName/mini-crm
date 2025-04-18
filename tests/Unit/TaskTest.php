@@ -17,6 +17,7 @@ class TaskTest extends TestCase
     {
         $user = User::factory()->create();
         $client = Client::factory()->create();
+        $deal = \App\Models\Deal::factory()->create(['client_id' => $client->id]);
         
         $taskData = [
             'title' => $this->faker->sentence,
@@ -26,6 +27,7 @@ class TaskTest extends TestCase
             'due_date' => now()->addDays(7),
             'user_id' => $user->id,
             'client_id' => $client->id,
+            'deal_id' => $deal->id,
         ];
 
         $task = Task::create($taskData);

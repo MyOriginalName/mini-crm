@@ -64,4 +64,9 @@ class Client extends Model
         }
         return $query;
     }
+
+    public function tags()
+    {
+        return $this->belongsToMany(Tag::class);
+    }
 }
