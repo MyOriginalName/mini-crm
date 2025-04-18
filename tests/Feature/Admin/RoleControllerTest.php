@@ -56,7 +56,7 @@ class RoleControllerTest extends TestCase
         $response->assertStatus(200);
         $response->assertInertia(fn ($assert) => $assert
             ->component('Admin/Roles/Index')
-            ->has('roles', 3)
+            ->has('roles.data', 3)
             ->has('permissions', 5)
         );
     }

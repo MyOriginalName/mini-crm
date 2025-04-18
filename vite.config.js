@@ -20,6 +20,8 @@ export default defineConfig({
         alias: {
             '@': path.resolve(__dirname, 'resources/js'), 
             '@css': path.resolve(__dirname, 'resources/css'),
+            'Components': path.resolve(__dirname, 'resources/js/Components'),
+            'Layouts': path.resolve(__dirname, 'resources/js/Layouts'),
         },
     },
     // Optimize for production

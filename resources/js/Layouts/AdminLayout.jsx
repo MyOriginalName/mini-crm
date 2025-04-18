@@ -1,6 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { Button } from '@/Components/ui/button';
+import { Button } from 'Components/ui/button';
 import { ChevronDown, LogOut, User } from 'lucide-react';
 
 export default function AdminLayout({ header, children }) {
@@ -49,6 +49,16 @@ export default function AdminLayout({ header, children }) {
                                     }`}
                                 >
                                     Настройки системы
+                                </Link>
+                                <Link
+                                    href={route('admin.roles.index')}
+                                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out ${
+                                        route().current('admin.roles.*')
+                                            ? 'border-indigo-400 text-gray-900'
+                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                    }`}
+                                >
+                                    Роли
                                 </Link>
                             </div>
                         </div>
@@ -108,4 +118,4 @@ export default function AdminLayout({ header, children }) {
             <main>{children}</main>
         </div>
     );
-} 
+}

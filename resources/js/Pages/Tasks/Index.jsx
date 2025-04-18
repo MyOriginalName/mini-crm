@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Head } from '@inertiajs/react';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import TaskList from '@/Components/Tasks/TaskList';
-import { Button } from '@/Components/ui/button';
-import { Input } from '@/Components/ui/input';
+import AuthenticatedLayout from 'Layouts/AuthenticatedLayout';
+import TaskList from 'Components/Tasks/TaskList';
+import { Button } from 'Components/ui/button';
+import { Input } from 'Components/ui/input';
 import { router } from '@inertiajs/react';
+
 
 export default function Index({ auth, tasks, filters, clients, deals, users }) {
   const [search, setSearch] = useState(filters.search || '');

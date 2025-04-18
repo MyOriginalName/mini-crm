@@ -13,15 +13,23 @@ class RoleController extends Controller
 {
     public function index()
     {
-        $roles = Role::all();
+        $roles = Role::with('permissions')->paginate(10);
         $permissions = Permission::all();
         return Inertia::render('Admin/Roles/Index', ['roles' => $roles, 'permissions' => $permissions]);
     }
 
     public function show(Role $role)
     {
+        $role->load('permissions');
         $permissions = Permission::all();
         return Inertia::render('Admin/Roles/Show', ['role' => $role, 'permissions' => $permissions]);
+    }
+
+    public function edit(Role $role)
+    {
+        $role->load('permissions');
+        $permissions = Permission::all();
+        return Inertia::render('Admin/Roles/Edit', ['role' => $role, 'permissions' => $permissions]);
     }
 
     public function update(Request $request, Role $role)
@@ -40,5 +48,29 @@ class RoleController extends Controller
         }
 
         return redirect()->route('admin.roles.index')->with('success', 'Роль успешно обновлена.');
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255', 'unique:roles,name'],
+            'permissions' => ['array'],
+            'permissions.*' => ['integer'],
+        ]);
+
+        $role = Role::create([
+            'name' => $validated['name'],
+        ]);
+
+        if (isset($validated['permissions'])) {
+            $role->syncPermissions($validated['permissions']);
+        }
+
+        return redirect()->route('admin.roles.index')->with('success', 'Роль успешно создана.');
+    }
+
+    public function destroy(Role $role)
+    {
+        abort(404);
     }
 }
