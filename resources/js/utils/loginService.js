@@ -22,7 +22,6 @@ const baseAxios = axios.create({
 export const getAuthToken = () => {
   const token = getStorageItem('token');
   if (!token) {
-    console.warn('No token found in storage');
     return null;
   }
   return token;
@@ -41,7 +40,6 @@ export const initSanctumAuth = async () => {
     
     // Get CSRF cookie at domain root
     const response = await baseAxios.get('/sanctum/csrf-cookie');
-    console.log('CSRF cookie response:', response.status);
     
     // Get XSRF token from cookie and set for both axios instances
     const cookies = document.cookie.split(';');
@@ -51,7 +49,6 @@ export const initSanctumAuth = async () => {
       const token = decodeURIComponent(xsrfToken.split('=')[1]);
       baseAxios.defaults.headers.common['X-XSRF-TOKEN'] = token;
       customAxios.defaults.headers.common['X-XSRF-TOKEN'] = token;
-      console.log('CSRF token initialized for both instances');
     }
     
     // Restore the original baseURL after getting CSRF cookie
@@ -74,10 +71,6 @@ export async function login(credentials) {
     
     // Attempt login with correct API endpoint
     const response = await baseAxios.post('/api/v1/login', credentials);
-    console.log('Login response:', {
-      status: response.status,
-      hasToken: !!response.data?.token
-    });
     
     // Handle token from API response
     const token = response.data?.token;
@@ -87,11 +80,9 @@ export async function login(credentials) {
     }
 
     // Store raw token and set auth header
-    console.log('Received token from API');
     setStorageItem('token', token);
     customAxios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     
-    console.log('Login successful, token stored and applied');
     return token;
   } catch (error) {
     console.error('Login failed:', error);

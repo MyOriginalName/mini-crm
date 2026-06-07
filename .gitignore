@@ -21,3 +21,9 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+/storage/api-docs
+.env.testing
+.env.test
+.cursor/
+.memory/
+/database/database.sqlite

@@ -25,25 +25,17 @@ class TinkoffApiService
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->token,
             'Accept' => 'application/json',
-        ])->withoutVerifying()
-          ->get($url);
-
-        Log::info("Tinkoff API Response", [
-            'status' => $response->status(),
-            'body' => $response->json(),
-        ]);
+        ])->get($url);
 
         if ($response->failed()) {
             Log::error("Tinkoff API Error", [
                 'url' => $url,
                 'status' => $response->status(),
-                'error' => $response->body(),
             ]);
             return null;
         }
 
         $data = $response->json();
-        Log::info('Ответ API', ['data' => $data]);
         return $data;
     }
 }
