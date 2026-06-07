@@ -2,24 +2,11 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Список клиентов</title>
+    <title>Клиенты</title>
     <style>
-        body {
-            font-family: DejaVu Sans, sans-serif;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f5f5f5;
-        }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
     </style>
 </head>
 <body>
@@ -31,8 +18,9 @@
                 <th>Имя</th>
                 <th>Email</th>
                 <th>Телефон</th>
+                <th>Тип</th>
+                <th>Статус</th>
                 <th>Компания</th>
-                <th>Теги</th>
             </tr>
         </thead>
         <tbody>
@@ -42,11 +30,12 @@
                 <td>{{ $client->name }}</td>
                 <td>{{ $client->email }}</td>
                 <td>{{ $client->phone }}</td>
-                <td>{{ $client->company }}</td>
-                <td>{{ $client->tags->pluck('name')->implode(', ') }}</td>
+                <td>{{ $client->type }}</td>
+                <td>{{ $client->status }}</td>
+                <td>{{ $client->company_name }}</td>
             </tr>
             @endforeach
         </tbody>
     </table>
 </body>
-</html> 
+</html>

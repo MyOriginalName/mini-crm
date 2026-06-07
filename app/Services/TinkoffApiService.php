@@ -12,24 +12,21 @@ class TinkoffApiService
 
     public function __construct()
     {
-        $this->apiUrl = config('services.tinkoff.api_url'); // Загружаем URL API из конфига
-        $this->token = config('services.tinkoff.token'); // Загружаем API-ключ
+        $this->apiUrl = config('services.tinkoff.api_url', 'https://api-invest.tinkoff.ru/openapi');
+        $this->token = config('services.tinkoff.token', '');
     }
 
-    /**
-     * Запрос списка акций
-     */
     public function getStocks()
     {
         $url = "{$this->apiUrl}/market/stocks";
 
-        Log::info("Tinkoff API Request", ['url' => $url]); // Логируем URL
+        Log::info("Tinkoff API Request", ['url' => $url]);
 
-    $response = Http::withHeaders([
-        'Authorization' => 'Bearer ' . $this->token,
-        'Accept' => 'application/json',
-    ])->withoutVerifying() // Отключаем проверку SSL
-      ->get($this->apiUrl);
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $this->token,
+            'Accept' => 'application/json',
+        ])->withoutVerifying()
+          ->get($url);
 
         Log::info("Tinkoff API Response", [
             'status' => $response->status(),
@@ -42,9 +39,11 @@ class TinkoffApiService
                 'status' => $response->status(),
                 'error' => $response->body(),
             ]);
+            return null;
         }
-Log::info('Ответ API', $data); // Логируем, что пришло
-return $data;
-        return $response->json();
+
+        $data = $response->json();
+        Log::info('Ответ API', ['data' => $data]);
+        return $data;
     }
 }

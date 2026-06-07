@@ -4,7 +4,6 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\TaskController;
-use App\Http\Controllers\TinkoffController;
 use App\Http\Controllers\Api\DealController;
 use Illuminate\Http\Request;
 
