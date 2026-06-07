@@ -18,9 +18,15 @@ return new class extends Migration
             $table->enum('status', ['pending', 'in_progress', 'completed']);
             $table->enum('priority', ['low', 'medium', 'high']);
             $table->timestamp('due_date');
+<<<<<<< HEAD
             $table->foreignId('deal_id')->nullable()->constrained()->onDelete('set null');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('client_id')->nullable()->constrained()->onDelete('set null');
+=======
+            $table->foreignId('deal_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('client_id')->constrained()->onDelete('cascade');
+>>>>>>> 05281e3be73d6ef9066b7d8269d689622d12a2be
             $table->timestamps();
             $table->softDeletes();
         });

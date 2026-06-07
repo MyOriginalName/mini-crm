@@ -39,8 +39,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Клиенты
     Route::middleware([\Spatie\Permission\Middleware\PermissionMiddleware::class.':view clients'])->group(function () {
+<<<<<<< HEAD
         Route::get('/clients/widget', [ClientController::class, 'widget'])->name('clients.widget.index');
         Route::post('/clients/widget', [ClientController::class, 'widgetStore'])->name('clients.widget.store');
+=======
+>>>>>>> 05281e3be73d6ef9066b7d8269d689622d12a2be
         Route::resource('clients', ClientController::class);
     });
 

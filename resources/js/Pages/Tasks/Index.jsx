@@ -1,9 +1,16 @@
 import React, { useState } from 'react';
 import { Head } from '@inertiajs/react';
 import AuthenticatedLayout from 'Layouts/AuthenticatedLayout';
+<<<<<<< HEAD
 import { Button } from 'Components/ui/button';
 import { Input } from 'Components/ui/input';
 import { Link, router } from '@inertiajs/react';
+=======
+import TaskList from 'Components/Tasks/TaskList';
+import { Button } from 'Components/ui/button';
+import { Input } from 'Components/ui/input';
+import { router } from '@inertiajs/react';
+>>>>>>> 05281e3be73d6ef9066b7d8269d689622d12a2be
 
 
 export default function Index({ auth, tasks, filters, clients, deals, users }) {
@@ -117,6 +124,7 @@ export default function Index({ auth, tasks, filters, clients, deals, users }) {
                 </div>
               </form>
 
+<<<<<<< HEAD
               <div className="space-y-2">
                 {tasks.data.length === 0 ? (
                   <p className="text-gray-500 text-center py-8">Задачи не найдены</p>
@@ -160,6 +168,9 @@ export default function Index({ auth, tasks, filters, clients, deals, users }) {
                   ))
                 )}
               </div>
+=======
+              <TaskList tasks={tasks} />
+>>>>>>> 05281e3be73d6ef9066b7d8269d689622d12a2be
             </div>
           </div>
         </div>

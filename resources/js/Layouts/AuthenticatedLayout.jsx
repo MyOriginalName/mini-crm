@@ -8,6 +8,10 @@ import { ChevronDown, LogOut, User } from 'lucide-react';
 
 export default function AuthenticatedLayout({ header, children }) {
     const user = usePage().props.auth.user;
+<<<<<<< HEAD
+=======
+    console.log("Auth data in layout:", user);
+>>>>>>> 05281e3be73d6ef9066b7d8269d689622d12a2be
 
     const [showingNavigationDropdown, setShowingNavigationDropdown] =
         useState(false);

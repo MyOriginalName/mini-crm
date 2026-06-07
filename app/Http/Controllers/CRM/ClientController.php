@@ -157,6 +157,7 @@ class ClientController extends Controller
             ->with('success', 'Клиент успешно удален');
     }
 
+<<<<<<< HEAD
     public function widgetStore(Request $request)
     {
         try {
@@ -199,6 +200,8 @@ class ClientController extends Controller
         }
     }
 
+=======
+>>>>>>> 05281e3be73d6ef9066b7d8269d689622d12a2be
     protected function canViewClient(Client $client): bool
     {
         if (auth()->user()->can('view clients')) {

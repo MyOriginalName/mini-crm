@@ -30,7 +30,11 @@ function ClientsWidget() {
       if (filters.email) params.email = filters.email;
       if (filters.phone) params.phone = filters.phone;
       
+<<<<<<< HEAD
       const response = await axios.get('/clients/widget', { params });
+=======
+      const response = await axios.get(route('clients.widget.index'), { params });
+>>>>>>> 05281e3be73d6ef9066b7d8269d689622d12a2be
       
       if (response.data.success) {
         setClients(response.data.data.data);

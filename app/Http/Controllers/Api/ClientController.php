@@ -85,6 +85,7 @@ class ClientController extends Controller
      */
     public function index(Request $request)
     {
+<<<<<<< HEAD
         if (!auth()->user()->hasAnyPermission(['view clients', 'view own clients'])) {
             return response()->json(['message' => 'Доступ запрещен'], 403);
         }
@@ -97,6 +98,11 @@ class ClientController extends Controller
             $query->where('user_id', auth()->id());
         }
 
+=======
+        $query = Client::query()
+            ->with('tags');
+
+>>>>>>> 05281e3be73d6ef9066b7d8269d689622d12a2be
         if ($request->has('search')) {
             $search = $request->get('search');
             $query->where(function($q) use ($search) {
@@ -187,10 +193,13 @@ class ClientController extends Controller
      */
     public function store(Request $request)
     {
+<<<<<<< HEAD
         if (!auth()->user()->can('create clients')) {
             return response()->json(['message' => 'Доступ запрещен'], 403);
         }
 
+=======
+>>>>>>> 05281e3be73d6ef9066b7d8269d689622d12a2be
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
@@ -281,6 +290,7 @@ class ClientController extends Controller
      */
     public function show(Client $client)
     {
+<<<<<<< HEAD
         if (!auth()->user()->hasAnyPermission(['view clients', 'view own clients'])) {
             return response()->json(['message' => 'Доступ запрещен'], 403);
         }
@@ -290,6 +300,8 @@ class ClientController extends Controller
             return response()->json(['message' => 'Доступ запрещен'], 403);
         }
 
+=======
+>>>>>>> 05281e3be73d6ef9066b7d8269d689622d12a2be
         return response()->json($client->load('tags', 'deals'));
     }
 
@@ -357,6 +369,7 @@ class ClientController extends Controller
      */
     public function update(Request $request, Client $client)
     {
+<<<<<<< HEAD
         if (!auth()->user()->hasAnyPermission(['edit clients', 'edit own clients'])) {
             return response()->json(['message' => 'Доступ запрещен'], 403);
         }
@@ -366,6 +379,8 @@ class ClientController extends Controller
             return response()->json(['message' => 'Доступ запрещен'], 403);
         }
 
+=======
+>>>>>>> 05281e3be73d6ef9066b7d8269d689622d12a2be
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
@@ -424,6 +439,7 @@ class ClientController extends Controller
      */
     public function destroy(Client $client)
     {
+<<<<<<< HEAD
         if (!auth()->user()->hasAnyPermission(['delete clients', 'delete own clients'])) {
             return response()->json(['message' => 'Доступ запрещен'], 403);
         }
@@ -433,6 +449,8 @@ class ClientController extends Controller
             return response()->json(['message' => 'Доступ запрещен'], 403);
         }
 
+=======
+>>>>>>> 05281e3be73d6ef9066b7d8269d689622d12a2be
         $client->delete();
         return response()->json(['message' => 'Клиент успешно удален']);
     }
@@ -468,10 +486,13 @@ class ClientController extends Controller
      */
     public function clients_export()
     {
+<<<<<<< HEAD
         if (!auth()->user()->can('view clients')) {
             return response()->json(['message' => 'Доступ запрещен'], 403);
         }
 
+=======
+>>>>>>> 05281e3be73d6ef9066b7d8269d689622d12a2be
         try {
             $clients = Client::with('tags')->get();
             
@@ -529,10 +550,13 @@ class ClientController extends Controller
      */
     public function widget(Request $request)
     {
+<<<<<<< HEAD
         if (!auth()->user()->hasAnyPermission(['view clients', 'view own clients'])) {
             return response()->json(['message' => 'Доступ запрещен'], 403);
         }
 
+=======
+>>>>>>> 05281e3be73d6ef9066b7d8269d689622d12a2be
         $query = Client::query();
 
         if ($request->filled('name')) {
@@ -603,15 +627,19 @@ class ClientController extends Controller
      */
     public function widgetStore(Request $request)
     {
+<<<<<<< HEAD
         if (!auth()->user()->can('create clients')) {
             return response()->json(['message' => 'Доступ запрещен'], 403);
         }
 
+=======
+>>>>>>> 05281e3be73d6ef9066b7d8269d689622d12a2be
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'email' => 'required|email|unique:clients,email',
                 'phone' => 'required|string|max:20',
+<<<<<<< HEAD
                 'company_name' => 'nullable|string|max:255',
             ]);
 
@@ -624,6 +652,18 @@ class ClientController extends Controller
                 'status' => 'active',
                 'user_id' => auth()->id(),
             ]);
+=======
+                'type' => 'required|string|in:individual,company',
+                'status' => 'required|string|in:active,inactive,blocked',
+                'company_name' => 'nullable|required_if:type,company|string|max:255',
+                'inn' => 'nullable|required_if:type,company|string|max:12',
+                'kpp' => 'nullable|string|max:9',
+                'address' => 'nullable|string|max:255',
+                'description' => 'nullable|string',
+            ]);
+
+            $client = Client::create($validated);
+>>>>>>> 05281e3be73d6ef9066b7d8269d689622d12a2be
 
             return response()->json($client, 201);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -697,6 +737,7 @@ class ClientController extends Controller
      */
     public function updateTags(Request $request, Client $client)
     {
+<<<<<<< HEAD
         if (!auth()->user()->hasAnyPermission(['edit clients', 'edit own clients'])) {
             return response()->json(['message' => 'Доступ запрещен'], 403);
         }
@@ -706,6 +747,8 @@ class ClientController extends Controller
             return response()->json(['message' => 'Доступ запрещен'], 403);
         }
 
+=======
+>>>>>>> 05281e3be73d6ef9066b7d8269d689622d12a2be
         try {
             $validated = $request->validate([
                 'tags' => 'required|array',

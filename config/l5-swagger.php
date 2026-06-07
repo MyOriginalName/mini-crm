@@ -65,10 +65,17 @@ return [
              * Middleware allows to prevent unexpected access to API documentation
              */
             'middleware' => [
+<<<<<<< HEAD
                 'api' => ['auth:sanctum'],
                 'asset' => ['auth:sanctum'],
                 'docs' => ['auth:sanctum'],
                 'oauth2_callback' => ['auth:sanctum'],
+=======
+                'api' => [],
+                'asset' => [],
+                'docs' => [],
+                'oauth2_callback' => [],
+>>>>>>> 05281e3be73d6ef9066b7d8269d689622d12a2be
             ],
 
             /*
