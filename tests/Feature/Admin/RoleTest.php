@@ -70,12 +70,20 @@ class RoleTest extends TestCase
         $this->assertTrue($role->hasPermissionTo('test permission'));
     }
 
-    public function test_delete_role_not_implemented()
+    public function test_can_delete_role()
     {
         $role = Role::create(['name' => 'to be deleted']);
         $response = $this->delete(route('admin.roles.destroy', $role));
-        $response->assertStatus(404);
-        $this->assertDatabaseHas('roles', ['name' => 'to be deleted']);
+        $response->assertRedirect(route('admin.roles.index'));
+        $this->assertDatabaseMissing('roles', ['name' => 'to be deleted']);
+    }
+
+    public function test_cannot_delete_admin_role()
+    {
+        $adminRole = Role::where('name', 'admin')->first();
+        $response = $this->delete(route('admin.roles.destroy', $adminRole));
+        $response->assertRedirect(route('admin.roles.index'));
+        $this->assertDatabaseHas('roles', ['name' => 'admin']);
     }
 
     public function test_validation_errors_on_create()

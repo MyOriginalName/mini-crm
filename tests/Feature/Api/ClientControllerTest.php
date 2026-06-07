@@ -14,13 +14,44 @@ class ClientControllerTest extends TestCase
 
     private $user;
     private $token;
+    private $userWithoutPermission;
+    private $tokenWithoutPermission;
 
     protected function setUp(): void
     {
         parent::setUp();
-        
+
+        $this->seed(\Database\Seeders\PermissionSeeder::class);
+
         $this->user = User::factory()->create();
         $this->token = $this->user->createToken('api-token')->plainTextToken;
+        $this->user->givePermissionTo([
+            'view clients',
+            'view own clients',
+            'create clients',
+            'edit clients',
+            'edit own clients',
+            'delete clients',
+            'delete own clients',
+        ]);
+
+        $this->userWithoutPermission = User::factory()->create();
+        $this->tokenWithoutPermission = $this->userWithoutPermission->createToken('api-token')->plainTextToken;
+    }
+
+    public function test_unauthenticated_user_cannot_access_clients()
+    {
+        $response = $this->getJson('/api/v1/clients');
+        $response->assertStatus(401);
+    }
+
+    public function test_user_without_permission_cannot_view_clients()
+    {
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $this->tokenWithoutPermission,
+        ])->getJson('/api/v1/clients');
+
+        $response->assertStatus(403);
     }
 
     public function test_can_get_clients_list()
@@ -61,6 +92,21 @@ class ClientControllerTest extends TestCase
         $response->assertStatus(200)
             ->assertJsonCount(1)
             ->assertJsonFragment(['type' => 'individual']);
+    }
+
+    public function test_user_without_permission_cannot_create_client()
+    {
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $this->tokenWithoutPermission,
+        ])->postJson('/api/v1/clients', [
+            'name' => 'Test',
+            'email' => 'test@example.com',
+            'phone' => '+1234567890',
+            'type' => 'individual',
+            'status' => 'active',
+        ]);
+
+        $response->assertStatus(403);
     }
 
     public function test_can_create_client()
@@ -107,6 +153,17 @@ class ClientControllerTest extends TestCase
             ->assertJsonValidationErrors(['name', 'email', 'type', 'status']);
     }
 
+    public function test_user_without_permission_cannot_view_client_details()
+    {
+        $client = Client::factory()->create();
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $this->tokenWithoutPermission,
+        ])->getJson("/api/v1/clients/{$client->id}");
+
+        $response->assertStatus(403);
+    }
+
     public function test_can_get_client_details()
     {
         $client = Client::factory()->create();
@@ -123,25 +180,34 @@ class ClientControllerTest extends TestCase
             ]);
     }
 
-    public function test_can_update_client()
+    public function test_user_without_permission_cannot_update_client()
     {
         $client = Client::factory()->create();
 
-        $updateData = [
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $this->tokenWithoutPermission,
+        ])->putJson("/api/v1/clients/{$client->id}", [
             'name' => 'Updated Name',
             'email' => $client->email,
             'type' => $client->type,
             'status' => $client->status,
-        ];
+        ]);
 
-        if ($client->type === 'company') {
-            $updateData['company_name'] = $client->company_name ?? 'Updated Company';
-            $updateData['inn'] = $client->inn ?? '123456789012';
-        }
+        $response->assertStatus(403);
+    }
+
+    public function test_can_update_client()
+    {
+        $client = Client::factory()->create(['type' => 'individual']);
 
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token,
-        ])->putJson("/api/v1/clients/{$client->id}", $updateData);
+        ])->putJson("/api/v1/clients/{$client->id}", [
+            'name' => 'Updated Name',
+            'email' => $client->email,
+            'type' => 'individual',
+            'status' => $client->status,
+        ]);
 
         $response->assertStatus(200)
             ->assertJson([
@@ -152,6 +218,17 @@ class ClientControllerTest extends TestCase
             'id' => $client->id,
             'name' => 'Updated Name',
         ]);
+    }
+
+    public function test_user_without_permission_cannot_delete_client()
+    {
+        $client = Client::factory()->create();
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $this->tokenWithoutPermission,
+        ])->deleteJson("/api/v1/clients/{$client->id}");
+
+        $response->assertStatus(403);
     }
 
     public function test_can_delete_client()
@@ -185,10 +262,57 @@ class ClientControllerTest extends TestCase
         $this->assertEquals(2, $client->tags()->count());
     }
 
-    public function test_unauthenticated_user_cannot_access_clients()
+    public function test_can_get_clients_widget()
     {
-        $response = $this->getJson('/api/v1/clients');
+        Client::factory()->count(3)->create();
 
-        $response->assertStatus(401);
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $this->token,
+        ])->getJson('/api/v1/clients/widget');
+
+        $response->assertStatus(200)
+            ->assertJsonCount(3);
     }
-} 
+
+    public function test_can_create_client_via_widget()
+    {
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $this->token,
+        ])->postJson('/api/v1/clients/widget', [
+            'name' => 'Widget Client',
+            'email' => 'widget@example.com',
+            'phone' => '+79991112233',
+        ]);
+
+        $response->assertStatus(201)
+            ->assertJson([
+                'name' => 'Widget Client',
+            ]);
+
+        $this->assertDatabaseHas('clients', [
+            'email' => 'widget@example.com',
+            'type' => 'individual',
+            'status' => 'active',
+        ]);
+    }
+
+    public function test_can_export_clients()
+    {
+        Client::factory()->count(2)->create();
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $this->token,
+        ])->getJson('/api/v1/clients/export');
+
+        $response->assertStatus(200);
+    }
+
+    public function test_user_without_permission_cannot_export_clients()
+    {
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $this->tokenWithoutPermission,
+        ])->getJson('/api/v1/clients/export');
+
+        $response->assertStatus(403);
+    }
+}

@@ -11,6 +11,14 @@ abstract class BaseTaskRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation()
+    {
+        $this->merge([
+            'client_id' => $this->client_id ? (int) $this->client_id : null,
+            'deal_id' => $this->deal_id ? (int) $this->deal_id : null,
+        ]);
+    }
+
     protected function getCommonRules(): array
     {
         return [
@@ -19,8 +27,8 @@ abstract class BaseTaskRequest extends FormRequest
             'status' => ['required', 'in:pending,in_progress,completed'],
             'priority' => ['required', 'in:low,medium,high'],
             'due_date' => ['required', 'date'],
-            'client_id' => ['nullable', 'exists:clients,id'],
-            'deal_id' => ['nullable', 'exists:deals,id'],
+            'client_id' => ['nullable', 'integer', 'exists:clients,id'],
+            'deal_id' => ['nullable', 'integer', 'exists:deals,id'],
         ];
     }
 

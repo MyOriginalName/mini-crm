@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { Head } from '@inertiajs/react';
 import AuthenticatedLayout from 'Layouts/AuthenticatedLayout';
-import TaskList from 'Components/Tasks/TaskList';
 import { Button } from 'Components/ui/button';
 import { Input } from 'Components/ui/input';
-import { router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 
 
 export default function Index({ auth, tasks, filters, clients, deals, users }) {
@@ -118,7 +117,49 @@ export default function Index({ auth, tasks, filters, clients, deals, users }) {
                 </div>
               </form>
 
-              <TaskList tasks={tasks} />
+              <div className="space-y-2">
+                {tasks.data.length === 0 ? (
+                  <p className="text-gray-500 text-center py-8">Задачи не найдены</p>
+                ) : (
+                  tasks.data.map((task) => (
+                    <Link
+                      key={task.id}
+                      href={route('tasks.show', task.id)}
+                      className="block p-4 border rounded-lg hover:bg-gray-50 transition"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-medium">{task.title}</h4>
+                          {task.description && (
+                            <p className="text-sm text-gray-600 mt-1">{task.description}</p>
+                          )}
+                        </div>
+                        <div className="flex gap-2 text-xs">
+                          <span className={`px-2 py-1 rounded-full ${
+                            task.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            task.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {task.status === 'completed' ? 'Завершено' :
+                             task.status === 'in_progress' ? 'В работе' : 'В ожидании'}
+                          </span>
+                          <span className={`px-2 py-1 rounded-full ${
+                            task.priority === 'high' ? 'bg-red-100 text-red-800' :
+                            task.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {task.priority === 'high' ? 'Высокий' :
+                             task.priority === 'medium' ? 'Средний' : 'Низкий'}
+                          </span>
+                        </div>
+                      </div>
+                      {task.client && (
+                        <p className="text-xs text-gray-500 mt-2">Клиент: {task.client.name}</p>
+                      )}
+                    </Link>
+                  ))
+                )}
+              </div>
             </div>
           </div>
         </div>

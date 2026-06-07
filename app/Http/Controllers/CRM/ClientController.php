@@ -157,6 +157,48 @@ class ClientController extends Controller
             ->with('success', 'Клиент успешно удален');
     }
 
+    public function widgetStore(Request $request)
+    {
+        try {
+            \Log::info('Widget store request received', $request->all());
+
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:clients,email',
+                'phone' => 'required|string|max:20',
+                'company' => 'nullable|string|max:255',
+            ]);
+
+            $client = Client::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'phone' => $validated['phone'],
+                'company_name' => $validated['company'] ?? null,
+                'type' => 'individual',
+                'status' => 'active',
+                'user_id' => auth()->id(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'data' => $client,
+                'message' => 'Клиент успешно создан',
+            ], 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ошибка валидации',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            \Log::error('Error in widgetStore: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Ошибка при создании клиента',
+            ], 500);
+        }
+    }
+
     protected function canViewClient(Client $client): bool
     {
         if (auth()->user()->can('view clients')) {

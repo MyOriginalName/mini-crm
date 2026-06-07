@@ -85,8 +85,17 @@ class ClientController extends Controller
      */
     public function index(Request $request)
     {
+        if (!auth()->user()->hasAnyPermission(['view clients', 'view own clients'])) {
+            return response()->json(['message' => 'Доступ запрещен'], 403);
+        }
+
         $query = Client::query()
             ->with('tags');
+
+        if (!auth()->user()->hasPermissionTo('view clients') && 
+            auth()->user()->hasPermissionTo('view own clients')) {
+            $query->where('user_id', auth()->id());
+        }
 
         if ($request->has('search')) {
             $search = $request->get('search');
@@ -178,6 +187,10 @@ class ClientController extends Controller
      */
     public function store(Request $request)
     {
+        if (!auth()->user()->can('create clients')) {
+            return response()->json(['message' => 'Доступ запрещен'], 403);
+        }
+
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
@@ -268,6 +281,15 @@ class ClientController extends Controller
      */
     public function show(Client $client)
     {
+        if (!auth()->user()->hasAnyPermission(['view clients', 'view own clients'])) {
+            return response()->json(['message' => 'Доступ запрещен'], 403);
+        }
+
+        if (!auth()->user()->can('view clients') && 
+            $client->user_id !== auth()->id()) {
+            return response()->json(['message' => 'Доступ запрещен'], 403);
+        }
+
         return response()->json($client->load('tags', 'deals'));
     }
 
@@ -335,6 +357,15 @@ class ClientController extends Controller
      */
     public function update(Request $request, Client $client)
     {
+        if (!auth()->user()->hasAnyPermission(['edit clients', 'edit own clients'])) {
+            return response()->json(['message' => 'Доступ запрещен'], 403);
+        }
+
+        if (!auth()->user()->can('edit clients') && 
+            $client->user_id !== auth()->id()) {
+            return response()->json(['message' => 'Доступ запрещен'], 403);
+        }
+
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
@@ -393,6 +424,15 @@ class ClientController extends Controller
      */
     public function destroy(Client $client)
     {
+        if (!auth()->user()->hasAnyPermission(['delete clients', 'delete own clients'])) {
+            return response()->json(['message' => 'Доступ запрещен'], 403);
+        }
+
+        if (!auth()->user()->can('delete clients') && 
+            $client->user_id !== auth()->id()) {
+            return response()->json(['message' => 'Доступ запрещен'], 403);
+        }
+
         $client->delete();
         return response()->json(['message' => 'Клиент успешно удален']);
     }
@@ -428,6 +468,10 @@ class ClientController extends Controller
      */
     public function clients_export()
     {
+        if (!auth()->user()->can('view clients')) {
+            return response()->json(['message' => 'Доступ запрещен'], 403);
+        }
+
         try {
             $clients = Client::with('tags')->get();
             
@@ -485,6 +529,10 @@ class ClientController extends Controller
      */
     public function widget(Request $request)
     {
+        if (!auth()->user()->hasAnyPermission(['view clients', 'view own clients'])) {
+            return response()->json(['message' => 'Доступ запрещен'], 403);
+        }
+
         $query = Client::query();
 
         if ($request->filled('name')) {
@@ -555,21 +603,27 @@ class ClientController extends Controller
      */
     public function widgetStore(Request $request)
     {
+        if (!auth()->user()->can('create clients')) {
+            return response()->json(['message' => 'Доступ запрещен'], 403);
+        }
+
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'email' => 'required|email|unique:clients,email',
                 'phone' => 'required|string|max:20',
-                'type' => 'required|string|in:individual,company',
-                'status' => 'required|string|in:active,inactive,blocked',
-                'company_name' => 'nullable|required_if:type,company|string|max:255',
-                'inn' => 'nullable|required_if:type,company|string|max:12',
-                'kpp' => 'nullable|string|max:9',
-                'address' => 'nullable|string|max:255',
-                'description' => 'nullable|string',
+                'company_name' => 'nullable|string|max:255',
             ]);
 
-            $client = Client::create($validated);
+            $client = Client::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'phone' => $validated['phone'],
+                'company_name' => $validated['company_name'] ?? null,
+                'type' => 'individual',
+                'status' => 'active',
+                'user_id' => auth()->id(),
+            ]);
 
             return response()->json($client, 201);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -643,6 +697,15 @@ class ClientController extends Controller
      */
     public function updateTags(Request $request, Client $client)
     {
+        if (!auth()->user()->hasAnyPermission(['edit clients', 'edit own clients'])) {
+            return response()->json(['message' => 'Доступ запрещен'], 403);
+        }
+
+        if (!auth()->user()->can('edit clients') && 
+            $client->user_id !== auth()->id()) {
+            return response()->json(['message' => 'Доступ запрещен'], 403);
+        }
+
         try {
             $validated = $request->validate([
                 'tags' => 'required|array',

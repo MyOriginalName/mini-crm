@@ -23,6 +23,9 @@ class PermissionSeeder extends Seeder
         Permission::create(['name' => 'edit clients']);
         Permission::create(['name' => 'delete clients']);
         Permission::create(['name' => 'view clients']);
+        Permission::create(['name' => 'view own clients']);
+        Permission::create(['name' => 'edit own clients']);
+        Permission::create(['name' => 'delete own clients']);
 
         // Разрешения для управления сделками
         Permission::create(['name' => 'manage deals']);
@@ -30,6 +33,9 @@ class PermissionSeeder extends Seeder
         Permission::create(['name' => 'edit deals']);
         Permission::create(['name' => 'delete deals']);
         Permission::create(['name' => 'view deals']);
+        Permission::create(['name' => 'view own deals']);
+        Permission::create(['name' => 'edit own deals']);
+        Permission::create(['name' => 'delete own deals']);
 
         // Разрешения для управления задачами
         Permission::create(['name' => 'manage tasks']);
