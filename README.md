@@ -1,39 +1,86 @@
+# Mini CRM
 
+CRM-система для управления клиентами, сделками и задачами с разграничением ролей.
 
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+## Стек
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+**Backend:** Laravel 11, PHP 8.2, MySQL/SQLite  
+**Frontend:** React 18, Inertia.js 2, Tailwind CSS 4, Radix UI, Recharts  
+**API:** REST (Sanctum-аутентификация)  
+**Infrastructure:** RoadRunner, Swagger/OpenAPI (l5-swagger)
 
-# CRM
+## Архитектура
 
-Небольшая CRM-система, проект сочетает  backend на Laravel и frontend на React (через Inertia.js и TailwindCSS).
+### Модели и связи
 
-## Используемые технологии
+- **User** — пользователь с ролями (Spatie Permission), связан с клиентами, сделками, задачами
+- **Client** — компания/контакт (soft-delete), тегируется (belongsToMany Tag)
+- **Deal** — сделка с воронкой статусов (in_progress → won/lost), soft-delete
+- **Task** — задача с приоритетами, связана с User/Client/Deal, soft-delete
+- **Log** — аудит действий (трейт `Loggable`)
+- **Tag** — теги для клиентов
 
-### Backend
-- **Laravel**
-- **REST API** + **Swagger** (документация и тестирование API)
-- **Spatie Laravel Permission** (роли и права пользователей)
-- **Laravel Sanctum** (аутентификация API)
+### Роли
 
-### Frontend
-- **React + Inertia.js**
-- **TailwindCSS**
+`admin` — полный доступ, включая управление пользователями, ролями и логами  
+`manager` — управление клиентами, сделками, задачами  
+`user` — ограниченный доступ
 
-## ⚙️ Основной функционал
-- Регистрация и авторизация пользователей
-- Управление ролями и правами (админ/пользователь)
-- Клиенты: создание, редактирование, фильтрация, теги
-- Логирование действий пользователей
-- Swagger-документация для API
-- Сделки: просмотр, редактирование, Kanban-доска (в процессе)
-- Задачи: список, фильтры, статусы (в процессе)
+### Маршруты
 
-## 📖 Документация
-В папке `/docs` описана архитектура, структура базы данных, эндпоинты API и правила тестирования.
+| Тип | Префикс | Аутентификация |
+|-----|---------|----------------|
+| Web SPA | `/dashboard`, `/clients`, `/deals`, `/tasks`, `/admin/*` | session + verified |
+| API | `/api/v1/*` | Sanctum (Bearer) |
 
+### API Endpoints
+
+```
+POST   /api/v1/register
+POST   /api/v1/login
+POST   /api/v1/logout
+GET    /api/v1/user
+
+GET    /api/v1/clients          POST   /api/v1/clients
+GET    /api/v1/clients/{id}     PUT    /api/v1/clients/{id}
+DELETE /api/v1/clients/{id}     PUT    /api/v1/clients/{id}/tags
+GET    /api/v1/clients/export   GET    /api/v1/clients/widget
+
+GET    /api/v1/tasks            POST   /api/v1/tasks
+GET    /api/v1/tasks/{id}       PUT    /api/v1/tasks/{id}
+DELETE /api/v1/tasks/{id}
+
+GET    /api/v1/deals            POST   /api/v1/deals
+GET    /api/v1/deals/{id}       PUT    /api/v1/deals/{id}
+DELETE /api/v1/deals/{id}       PUT    /api/v1/deals/{id}/status
+```
+
+## Установка
+
+```bash
+git clone <repo>
+cd mini-crm
+cp .env.example .env
+php artisan key:generate
+composer install
+npm install
+npm run build
+php artisan migrate --seed
+php artisan serve
+```
+
+## Тестовые аккаунты
+
+| Роль | Email | Пароль |
+|------|-------|--------|
+| Admin | admin@demo.com | admin123 |
+| Manager | manager@demo.com | manager123 |
+| User | user@demo.com | user123 |
+
+## Тестирование
+
+```bash
+php artisan test
+```
+
+Тесты используют in-memory SQLite. Параметры окружения заданы в `phpunit.xml`.
