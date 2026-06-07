@@ -27,13 +27,8 @@ class UserController extends Controller
             ->paginate(10);
 
         $roles = Role::all();
-        $logs = Log::where('user_id', '!=', null)
-            ->with('user')
-            ->latest()
-            ->take(50)
-            ->get();
 
-        return view('users.index', compact('users', 'roles', 'logs'));
+        return Inertia::render('Users/Index', compact('users', 'roles'));
     }
 
     public function store(Request $request)
@@ -101,6 +96,6 @@ class UserController extends Controller
             ->latest()
             ->paginate(20);
 
-        return view('users.logs', compact('user', 'logs'));
+        return Inertia::render('Users/Logs', compact('user', 'logs'));
     }
-} 
+}

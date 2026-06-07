@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\DB;
 use App\Traits\Loggable;
 
 class Client extends Model
@@ -44,7 +43,12 @@ class Client extends Model
     public function scopeSearch($query, $search)
     {
         if ($search) {
-            return $query->whereRaw("MATCH(name, email, phone, company_name) AGAINST(? IN BOOLEAN MODE)", [$search . '*']);
+            return $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhere('company_name', 'like', "%{$search}%");
+            });
         }
         return $query;
     }
