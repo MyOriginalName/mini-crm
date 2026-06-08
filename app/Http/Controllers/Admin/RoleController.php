@@ -71,7 +71,6 @@ class RoleController extends Controller
 
     public function destroy(Role $role)
     {
-<<<<<<< HEAD
         if ($role->name === 'admin') {
             return redirect()->route('admin.roles.index')
                 ->with('error', 'Роль администратора не может быть удалена.');
@@ -81,8 +80,5 @@ class RoleController extends Controller
 
         return redirect()->route('admin.roles.index')
             ->with('success', 'Роль успешно удалена.');
-=======
-        abort(404);
->>>>>>> 05281e3be73d6ef9066b7d8269d689622d12a2be
     }
 }
